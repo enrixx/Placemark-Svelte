@@ -1,11 +1,11 @@
 <script lang="ts">
-  interface Props {
-    message: string;
-  }
+    interface Props {
+        message: string;
+    }
 
-  let { message }: Props = $props();
+    let {message}: Props = $props();
 </script>
 
 <div class="notification is-danger">
-  {message}
+    {message}
 </div>

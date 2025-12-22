@@ -1,31 +1,31 @@
 <script lang="ts">
-  import { goto } from '$app/navigation';
-  import { placemarkService } from '$lib/services/placemark-service';
-  import Message from '$lib/ui/Message.svelte';
-  import UserCredentials from '$lib/ui/UserCredentials.svelte';
+    import {goto} from '$app/navigation';
+    import {placemarkService} from '$lib/services/placemark-service';
+    import Message from '$lib/ui/Message.svelte';
+    import UserCredentials from '$lib/ui/UserCredentials.svelte';
 
-  let email = $state('');
-  let password = $state('');
-  let message = $state('');
+    let email = $state('');
+    let password = $state('');
+    let message = $state('');
 
-  async function login() {
-    console.log(`attempting to log in email: ${email} with password: ${password}`);
-    let session = await placemarkService.login(email, password);
-    if (session) {
-      goto('/dashboard');
-    } else {
-      email = '';
-      password = '';
-      message = 'Invalid Credentials';
+    async function login() {
+        console.log(`attempting to log in email: ${email} with password: ${password}`);
+        let session = await placemarkService.login(email, password);
+        if (session) {
+            goto('/dashboard');
+        } else {
+            email = '';
+            password = '';
+            message = 'Invalid Credentials';
+        }
     }
-  }
 </script>
 
 <div class="box">
-  {#if message}
-    <Message {message} />
-  {/if}
-  <UserCredentials bind:email bind:password />
-  <button onclick={() => login()} class="button is-link">Log In</button>
+    {#if message}
+        <Message {message}/>
+    {/if}
+    <UserCredentials bind:email bind:password/>
+    <button onclick={() => login()} class="button is-link">Log In</button>
 </div>
 

@@ -98,7 +98,45 @@ export const placemarkService = {
             console.log(error);
             return null;
         }
+    },
+
+    async getWeather(placemarkId: string) {
+        try {
+            const response = await axios.get(`${this.baseUrl}/api/placemarks/${placemarkId}/weather`);
+            return response.data;
+        } catch (error) {
+            console.log(error);
+            return null;
+        }
+    },
+
+    async getPlacemarks() {
+        try {
+            const response = await axios.get(`${this.baseUrl}/api/placemarks`);
+            return response.data;
+        } catch (error) {
+            console.log(error);
+            return [];
+        }
+    },
+
+    async getPlacemarkById(id: string) {
+        try {
+            const response = await axios.get(`${this.baseUrl}/api/placemarks/${id}`);
+            return response.data;
+        } catch (error) {
+            console.log(error);
+            return null;
+        }
+    },
+
+    async getPlacemarksByUserId(userId: string) {
+        try {
+            const response = await axios.get(`${this.baseUrl}/api/users/${userId}/placemarks`);
+            return response.data;
+        } catch (error) {
+            console.log(error);
+            return [];
+        }
     }
 };
-
-
