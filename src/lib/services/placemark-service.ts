@@ -57,16 +57,21 @@ export const placemarkService = {
     },
 
     async restoreSession() {
-        const savedLoggedInUser = localStorage.getItem("placemark");
-        if (savedLoggedInUser) {
-            const session = JSON.parse(savedLoggedInUser);
-            loggedInUser.email = session.email;
-            loggedInUser.firstName = session.firstName;
-            loggedInUser.lastName = session.lastName;
-            loggedInUser.token = session.token;
-            loggedInUser._id = session._id;
-            loggedInUser.role = session.role;
-            axios.defaults.headers.common["Authorization"] = "Bearer " + session.token;
+        try {
+            const savedLoggedInUser = localStorage.getItem("placemark");
+            if (savedLoggedInUser) {
+                const session = JSON.parse(savedLoggedInUser);
+                loggedInUser.email = session.email;
+                loggedInUser.firstName = session.firstName;
+                loggedInUser.lastName = session.lastName;
+                loggedInUser.token = session.token;
+                loggedInUser._id = session._id;
+                loggedInUser.role = session.role;
+                axios.defaults.headers.common["Authorization"] = "Bearer " + session.token;
+            }
+        } catch (error) {
+            console.log("Error restoring session: ", error);
+            this.clearSession();
         }
     },
 

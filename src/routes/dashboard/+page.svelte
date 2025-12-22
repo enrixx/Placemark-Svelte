@@ -1,23 +1,31 @@
 <script lang="ts">
     import {onMount} from 'svelte';
     import {goto} from '$app/navigation';
-    import {loggedInUser} from '$lib/runes.svelte';
+    import {loggedInUser, currentPlacemarks} from '$lib/runes.svelte';
     import {placemarkService} from '$lib/services/placemark-service';
-    import type {Placemark} from '$lib/types/placemark-types';
+    import {refreshPlacemarkState, clearPlacemarkState} from '$lib/services/placemark-utils';
+    import LeafletMap from '$lib/ui/LeafletMap.svelte';
 
-    let placemarks: Placemark[] = [];
+    const terrainLayerUrl = "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png";
 
     onMount(async () => {
-        await placemarkService.restoreSession();
+        try {
+            await placemarkService.restoreSession();
+        } catch (e) {
+            console.log("Error restoring session", e);
+        }
 
         if (!loggedInUser.token) {
-            goto('/login');
+            await goto('/login');
+            return;
         }
-        placemarks = await placemarkService.getPlacemarks();
+
+        // Ensure the dashboard doesn't initialize maps with an empty POI list on reload.
+        await refreshPlacemarkState();
     });
 
     function handleLogout() {
-        placemarkService.clearSession();
+        clearPlacemarkState();
         goto('/login');
     }
 </script>
@@ -45,7 +53,21 @@
 
             <div class="box">
                 <h2 class="title is-4">Your Placemarks</h2>
-                {#if placemarks.length > 0}
+
+                {#if currentPlacemarks.loaded}
+                    <div class="columns">
+                        <div class="column">
+                            <LeafletMap placemarks={currentPlacemarks.placemarks} />
+                        </div>
+                        <div class="column">
+                            <LeafletMap placemarks={currentPlacemarks.placemarks} tileLayerUrl={terrainLayerUrl} />
+                        </div>
+                    </div>
+                {:else}
+                    <div class="notification">Loading map points...</div>
+                {/if}
+
+                {#if currentPlacemarks.placemarks.length > 0}
                     <table class="table is-fullwidth is-striped">
                         <thead>
                         <tr>
@@ -56,7 +78,7 @@
                         </tr>
                         </thead>
                         <tbody>
-                        {#each placemarks as placemark}
+                        {#each currentPlacemarks.placemarks as placemark}
                             <tr>
                                 <td>{placemark.name}</td>
                                 <td>{placemark.categoryName}</td>
