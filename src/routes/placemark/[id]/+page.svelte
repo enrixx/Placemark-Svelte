@@ -4,13 +4,41 @@
     import {goto} from '$app/navigation';
     import {loggedInUser} from '$lib/runes.svelte';
     import {placemarkService} from '$lib/services/placemark-service';
-    import type {Placemark} from '$lib/types/placemark-types';
-    import Chart from 'svelte-frappe-charts';
+    import type {ChartData, Placemark, WeatherResponse} from '$lib/types/placemark-types';
+    import WeatherCharts from '$lib/ui/WeatherCharts.svelte';
+    import * as weatherCharts from '$lib/services/weather-charts';
 
     let placemark: Placemark | null = null;
-    let weatherData: any = null;
-    let pastChartData: any = null;
-    let futureChartData: any = null;
+    let weatherData: WeatherResponse | null = null;
+
+    let pastTempChartData: ChartData | null = null;
+    let futureTempChartData: ChartData | null = null;
+
+    let pastRainChartData: ChartData | null = null;
+    let futureRainChartData: ChartData | null = null;
+
+    let windHeatmapDays: string[] = [];
+    let windHeatmapHours: number[] = [];
+    let windHeatmapGrid: Array<Array<number | null>> = [];
+    let windHeatmapUnit: string = '';
+
+    const recomputeWindHeatmap = () => {
+        if (!weatherData) {
+            windHeatmapDays = [];
+            windHeatmapHours = [];
+            windHeatmapGrid = [];
+            windHeatmapUnit = '';
+            return;
+        }
+
+        const grid = weatherCharts.buildFutureWindHeatmapGrid(weatherData, 7);
+        windHeatmapDays = grid?.days ?? [];
+        windHeatmapHours = grid?.hours ?? [];
+        windHeatmapGrid = grid?.grid ?? [];
+        windHeatmapUnit = grid?.unit ?? '';
+    };
+
+    $: if (weatherData) recomputeWindHeatmap();
 
     onMount(async () => {
         await placemarkService.restoreSession();
@@ -22,48 +50,24 @@
 
         const placemarkId = page.params.id as string;
         placemark = await placemarkService.getPlacemarkById(placemarkId);
-        if (placemark) {
-            weatherData = await placemarkService.getWeather(placemarkId);
-            if (weatherData && weatherData.daily) {
-                const today = new Date().toISOString().split('T')[0];
-                const dates = weatherData.daily.time;
-                const maxTemps = weatherData.daily.temperature_2m_max;
-                const minTemps = weatherData.daily.temperature_2m_min;
+        if (!placemark) return;
 
-                const pastIndices: number[] = [];
-                const futureIndices: number[] = [];
+        weatherData = await placemarkService.getWeather(placemarkId);
+        const daily = weatherData?.daily;
+        if (!daily?.time?.length) return;
 
-                dates.forEach((date: string, index: number) => {
-                    if (date < today) {
-                        pastIndices.push(index);
-                    } else {
-                        futureIndices.push(index);
-                    }
-                });
+        const today = new Date().toISOString().split('T')[0];
+        const split = weatherCharts.splitPastFutureIndices(daily.time, today);
 
-                const extract = (data: any[], indices: number[]) => indices.map(i => data[i]);
+        const temps = weatherCharts.buildTemperatureCharts(daily, split);
+        pastTempChartData = temps.past;
+        futureTempChartData = temps.future;
 
-                if (pastIndices.length > 0) {
-                    pastChartData = {
-                        labels: extract(dates, pastIndices),
-                        datasets: [
-                            { name: "Max Temp (°C)", values: extract(maxTemps, pastIndices) },
-                            { name: "Min Temp (°C)", values: extract(minTemps, pastIndices) }
-                        ]
-                    };
-                }
+        const rain = weatherCharts.buildRainCharts(daily, split);
+        pastRainChartData = rain.past;
+        futureRainChartData = rain.future;
 
-                if (futureIndices.length > 0) {
-                    futureChartData = {
-                        labels: extract(dates, futureIndices),
-                        datasets: [
-                            { name: "Max Temp (°C)", values: extract(maxTemps, futureIndices) },
-                            { name: "Min Temp (°C)", values: extract(minTemps, futureIndices) }
-                        ]
-                    };
-                }
-            }
-        }
+        recomputeWindHeatmap();
     });
 </script>
 
@@ -88,26 +92,18 @@
                         </div>
                     </div>
 
-                    {#if pastChartData || futureChartData}
-                        <div class="columns">
-                            {#if pastChartData}
-                                <div class="column">
-                                    <div class="box">
-                                        <h2 class="title is-4">Past Weather</h2>
-                                        <Chart data={pastChartData} type="line" height={300}/>
-                                    </div>
-                                </div>
-                            {/if}
-                            {#if futureChartData}
-                                <div class="column">
-                                    <div class="box">
-                                        <h2 class="title is-4">Future Weather</h2>
-                                        <Chart data={futureChartData} type="line" height={300}/>
-                                    </div>
-                                </div>
-                            {/if}
-                        </div>
-                    {:else}
+                    <WeatherCharts
+                            {pastTempChartData}
+                            {futureTempChartData}
+                            {pastRainChartData}
+                            {futureRainChartData}
+                            {windHeatmapDays}
+                            {windHeatmapHours}
+                            {windHeatmapGrid}
+                            {windHeatmapUnit}
+                    />
+
+                    {#if !(pastTempChartData || futureTempChartData || pastRainChartData || futureRainChartData || windHeatmapGrid.length)}
                         <div class="notification is-warning">
                             Weather data not available.
                         </div>
