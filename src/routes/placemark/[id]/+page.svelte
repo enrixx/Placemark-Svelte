@@ -26,7 +26,7 @@
     let selectedFile = $state<File | null>(null);
     let isUploading = $state(false);
     let uploadError = $state('');
-    let fileInput: HTMLInputElement;
+    let fileInput = $state<HTMLInputElement>();
 
     const recomputeWindHeatmap = () => {
         if (!weatherData) {
@@ -61,6 +61,7 @@
         try {
             const updatedPlacemark = await placemarkService.uploadImage(placemark._id, selectedFile);
             if (updatedPlacemark) {
+                await refreshPlacemark();
                 placemark = updatedPlacemark;
                 selectedFile = null;
                 if (fileInput) {

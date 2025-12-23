@@ -9,16 +9,17 @@
         onImageDeleted?: () => void;
     }
 
-    let {images = [], placemarkId, onImageDeleted}: Props = $props();
+    let props: Props = $props();
 
     let currentIndex = $state(0);
     let isDeleting = $state(false);
 
     // Reset currentIndex if it's out of bounds when images change
     $effect(() => {
-        if (images.length > 0 && currentIndex >= images.length) {
-            currentIndex = images.length - 1;
-        } else if (images.length === 0) {
+        const imgs = props.images ?? [];
+        if (imgs.length > 0 && currentIndex >= imgs.length) {
+            currentIndex = imgs.length - 1;
+        } else if (imgs.length === 0) {
             currentIndex = 0;
         }
     });
@@ -29,19 +30,24 @@
     };
 
     const nextImage = () => {
-        if (images.length > 0) {
-            currentIndex = (currentIndex + 1) % images.length;
+        const imgs = props.images ?? [];
+        if (imgs.length > 0) {
+            currentIndex = (currentIndex + 1) % imgs.length;
         }
     };
 
     const prevImage = () => {
-        if (images.length > 0) {
-            currentIndex = (currentIndex - 1 + images.length) % images.length;
+        const imgs = props.images ?? [];
+        if (imgs.length > 0) {
+            currentIndex = (currentIndex - 1 + imgs.length) % imgs.length;
         }
     };
 
     const deleteImage = async () => {
-        if (!images[currentIndex]?._id) {
+        const imgs = props.images ?? [];
+        const placemarkId = props.placemarkId;
+
+        if (!imgs[currentIndex]?._id) {
             console.error('No image ID found at current index');
             return;
         }
@@ -52,11 +58,9 @@
 
         isDeleting = true;
         try {
-            const result = await placemarkService.deleteImage(placemarkId, images[currentIndex]._id!);
+            const result = await placemarkService.deleteImage(placemarkId, imgs[currentIndex]._id!);
             if (result) {
-                if (onImageDeleted) {
-                    await onImageDeleted();
-                }
+                await props.onImageDeleted?.();
             } else {
                 alert('Failed to delete image. Please try again.');
             }
@@ -69,19 +73,19 @@
     };
 </script>
 
-{#if images && images.length > 0}
+{#if (props.images ?? []).length > 0}
     <div class="image-carousel">
         <div class="carousel-container">
             <div class="image-wrapper">
-                <img src={images[currentIndex].url} alt="Placemark image {currentIndex + 1}"/>
+                <img src={props.images[currentIndex].url} alt="Placemark image {currentIndex + 1}"/>
 
-                {#if canDelete(images[currentIndex])}
+                {#if canDelete(props.images[currentIndex])}
                     <button
                             type="button"
                             class="delete-button"
-                            onclick={(e) => {
+                            onclick={async (e) => {
                                 e.stopPropagation();
-                                deleteImage();
+                                await deleteImage();
                             }}
                             disabled={isDeleting}
                             title="Delete image"
@@ -91,7 +95,7 @@
                 {/if}
             </div>
 
-            {#if images.length > 1}
+            {#if props.images.length > 1}
                 <button type="button" class="nav-button prev" onclick={prevImage} title="Previous image">
                     <i class="fas fa-chevron-left"></i>
                 </button>
@@ -100,7 +104,7 @@
                 </button>
 
                 <div class="carousel-dots">
-                    {#each images as _, index}
+                    {#each props.images as _, index}
                         <button
                                 type="button"
                                 class="dot"
@@ -113,7 +117,7 @@
             {/if}
 
             <div class="image-counter">
-                {currentIndex + 1} / {images.length}
+                {currentIndex + 1} / {props.images.length}
             </div>
         </div>
     </div>
