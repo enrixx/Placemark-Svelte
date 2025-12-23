@@ -77,8 +77,12 @@
 
                 {#if canDelete(images[currentIndex])}
                     <button
+                            type="button"
                             class="delete-button"
-                            onclick={deleteImage}
+                            onclick={(e) => {
+                                e.stopPropagation();
+                                deleteImage();
+                            }}
                             disabled={isDeleting}
                             title="Delete image"
                     >
@@ -88,16 +92,17 @@
             </div>
 
             {#if images.length > 1}
-                <button class="nav-button prev" onclick={prevImage} title="Previous image">
+                <button type="button" class="nav-button prev" onclick={prevImage} title="Previous image">
                     <i class="fas fa-chevron-left"></i>
                 </button>
-                <button class="nav-button next" onclick={nextImage} title="Next image">
+                <button type="button" class="nav-button next" onclick={nextImage} title="Next image">
                     <i class="fas fa-chevron-right"></i>
                 </button>
 
                 <div class="carousel-dots">
                     {#each images as _, index}
                         <button
+                                type="button"
                                 class="dot"
                                 class:active={index === currentIndex}
                                 onclick={() => (currentIndex = index)}
@@ -260,4 +265,3 @@
         }
     }
 </style>
-
