@@ -3,16 +3,27 @@
     import type {ChartData} from '$lib/types/placemark-types';
     import WindHeatmap from '$lib/ui/WindHeatmap.svelte';
 
-    export let pastTempChartData: ChartData | null = null;
-    export let futureTempChartData: ChartData | null = null;
+    interface Props {
+        pastTempChartData?: ChartData | null;
+        futureTempChartData?: ChartData | null;
+        pastRainChartData?: ChartData | null;
+        futureRainChartData?: ChartData | null;
+        windHeatmapDays?: string[];
+        windHeatmapHours?: number[];
+        windHeatmapGrid?: Array<Array<number | null>>;
+        windHeatmapUnit?: string;
+    }
 
-    export let pastRainChartData: ChartData | null = null;
-    export let futureRainChartData: ChartData | null = null;
-
-    export let windHeatmapDays: string[] = [];
-    export let windHeatmapHours: number[] = [];
-    export let windHeatmapGrid: Array<Array<number | null>> = [];
-    export let windHeatmapUnit: string = '';
+    let {
+        pastTempChartData = null,
+        futureTempChartData = null,
+        pastRainChartData = null,
+        futureRainChartData = null,
+        windHeatmapDays = [],
+        windHeatmapHours = [],
+        windHeatmapGrid = [],
+        windHeatmapUnit = ''
+    }: Props = $props();
 </script>
 
 {#if pastTempChartData || futureTempChartData}

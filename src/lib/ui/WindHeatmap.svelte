@@ -1,19 +1,28 @@
 <script lang="ts">
   type WindHeatmapCell = number | null;
 
-  export let days: string[] = []; // columns (YYYY-MM-DD)
-  export let hours: number[] = Array.from({ length: 24 }, (_, i) => i); // rows (0..23)
-  export let grid: WindHeatmapCell[][] = []; // [hourIndex][dayIndex]
-  export let unit: string = "";
+  interface Props {
+    days?: string[]; // columns (YYYY-MM-DD)
+    hours?: number[]; // rows (0..23)
+    grid?: WindHeatmapCell[][]; // [hourIndex][dayIndex]
+    unit?: string;
+  }
+
+  let {
+    days = [],
+    hours = Array.from({ length: 24 }, (_, i) => i),
+    grid = [],
+    unit = ""
+  }: Props = $props();
 
   const clamp01 = (x: number) => Math.max(0, Math.min(1, x));
 
   const flatten = (m: WindHeatmapCell[][]): number[] =>
     m.flatMap((r) => r.filter((v): v is number => typeof v === "number" && !Number.isNaN(v)));
 
-  $: values = flatten(grid);
-  $: max = values.length ? Math.max(...values) : 0;
-  $: min = values.length ? Math.min(...values) : 0;
+  const values = $derived(flatten(grid));
+  const max = $derived(values.length ? Math.max(...values) : 0);
+  const min = $derived(values.length ? Math.min(...values) : 0);
 
   const colorFor = (v: WindHeatmapCell) => {
     if (v === null || Number.isNaN(v) || max <= 0) {

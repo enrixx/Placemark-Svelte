@@ -18,6 +18,13 @@ export interface Session {
   token: string;
 }
 
+export interface PlacemarkImage {
+  _id?: string;
+  url: string;
+  publicId: string;
+  uploaderId: string;
+}
+
 export interface Placemark {
   _id?: string;
   name: string;
@@ -27,6 +34,7 @@ export interface Placemark {
   latitude: number;
   img?: string | null;
   imgPublicId?: string | null;
+  images?: PlacemarkImage[];
   categoryId?: string;
   userid?: string;
 }

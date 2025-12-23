@@ -3,6 +3,7 @@
     import {goto} from '$app/navigation';
     import {loggedInUser} from '$lib/runes.svelte';
     import {placemarkService} from '$lib/services/placemark-service';
+    import ErrorNotification from '$lib/ui/ErrorNotification.svelte';
 
     let {children} = $props();
 
@@ -55,6 +56,8 @@
         goto('/');
     }
 </script>
+
+<ErrorNotification />
 
 <nav class="navbar is-primary" aria-label="main navigation">
     <div class="navbar-brand">
