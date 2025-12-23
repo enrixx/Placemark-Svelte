@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, {type AxiosError} from "axios";
 
 import type {User, RegisterData, Session} from "$lib/types/placemark-types";
 import {loggedInUser} from "$lib/runes.svelte";
@@ -61,6 +61,16 @@ export const placemarkService = {
             const savedLoggedInUser = localStorage.getItem("placemark");
             if (savedLoggedInUser) {
                 const session = JSON.parse(savedLoggedInUser);
+                if (session.token) {
+                    //Check if the token is expired
+                    const payload = JSON.parse(atob(session.token.split('.')[1]));
+                    const exp = payload.exp;
+                    const now = Math.floor(Date.now() / 1000);
+                    if (exp && exp < now) {
+                        this.clearSession();
+                        return;
+                    }
+                }
                 loggedInUser.email = session.email;
                 loggedInUser.firstName = session.firstName;
                 loggedInUser.lastName = session.lastName;
@@ -90,7 +100,7 @@ export const placemarkService = {
             const response = await axios.get(`${this.baseUrl}/api/users`);
             return response.data;
         } catch (error) {
-            console.log(error);
+            this.handleError(error);
             return [];
         }
     },
@@ -100,7 +110,7 @@ export const placemarkService = {
             const response = await axios.get(`${this.baseUrl}/api/users/${id}`);
             return response.data;
         } catch (error) {
-            console.log(error);
+            this.handleError(error);
             return null;
         }
     },
@@ -110,7 +120,7 @@ export const placemarkService = {
             const response = await axios.get(`${this.baseUrl}/api/placemarks/${placemarkId}/weather`);
             return response.data;
         } catch (error) {
-            console.log(error);
+            this.handleError(error);
             return null;
         }
     },
@@ -120,7 +130,7 @@ export const placemarkService = {
             const response = await axios.get(`${this.baseUrl}/api/placemarks`);
             return response.data;
         } catch (error) {
-            console.log(error);
+            this.handleError(error);
             return [];
         }
     },
@@ -130,7 +140,7 @@ export const placemarkService = {
             const response = await axios.get(`${this.baseUrl}/api/placemarks/${id}`);
             return response.data;
         } catch (error) {
-            console.log(error);
+            this.handleError(error);
             return null;
         }
     },
@@ -140,8 +150,19 @@ export const placemarkService = {
             const response = await axios.get(`${this.baseUrl}/api/users/${userId}/placemarks`);
             return response.data;
         } catch (error) {
-            console.log(error);
+            this.handleError(error);
             return [];
         }
+    },
+
+    handleError(error: any) {
+        const e = error as AxiosError;
+        if (e.response?.status === 401) {
+            this.clearSession();
+            if (typeof window !== 'undefined') {
+                window.location.href = "/login";
+            }
+        }
+        console.log(error);
     }
 };
