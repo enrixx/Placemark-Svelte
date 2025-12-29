@@ -82,34 +82,51 @@
         }
 
         overlays = {};
-        const categories: Set<string> = new Set(placemarks.map((p: Placemark) => p.categoryName));
 
-        categories.forEach((category) => {
-            overlays[category] = L.layerGroup();
+        // Group placemarks by category
+        const placemarksByCategory = new Map<string, Placemark[]>();
+
+        placemarks.forEach((p: Placemark) => {
+            const cat = p.categoryName || "Uncategorized";
+            if (!placemarksByCategory.has(cat)) {
+                placemarksByCategory.set(cat, []);
+            }
+            placemarksByCategory.get(cat)?.push(p);
         });
 
-        placemarks.forEach((placemark: Placemark) => {
-            if (placemark.latitude && placemark.longitude) {
-                const marker = L.marker([placemark.latitude, placemark.longitude]);
-                const popupContent = `
-                    <b>${placemark.name}</b><br>
-                    ${placemark.categoryName}<br>
-                    <a href="/placemark/${placemark._id}">View Details</a>
-                `;
-                marker.bindPopup(popupContent);
-                marker.on('click', () => {
-                    mapState.location = { lat: placemark.latitude, lng: placemark.longitude };
-                    mapState.zoom = 15;
-                    mapState.selectedPlacemarkId = placemark._id || "";
-                    persistMapState();
-                });
-                if (overlays[placemark.categoryName]) {
-                    marker.addTo(overlays[placemark.categoryName]);
+        // Sort categories alphabetically
+        const sortedCategories = Array.from(placemarksByCategory.keys()).sort();
+
+        sortedCategories.forEach((category) => {
+            const categoryPlacemarks = placemarksByCategory.get(category);
+            const markers: any[] = [];
+
+            categoryPlacemarks?.forEach((placemark: Placemark) => {
+                if (placemark.latitude && placemark.longitude) {
+                    const marker = L.marker([placemark.latitude, placemark.longitude]);
+                    const popupContent = `
+                        <b>${placemark.name}</b><br>
+                        ${placemark.categoryName || "Uncategorized"}<br>
+                        <a href="/placemark/${placemark._id}">View Details</a>
+                    `;
+                    marker.bindPopup(popupContent);
+                    marker.on('click', () => {
+                        mapState.location = { lat: placemark.latitude, lng: placemark.longitude };
+                        mapState.zoom = 15;
+                        mapState.selectedPlacemarkId = placemark._id || "";
+                        persistMapState();
+                    });
+                    markers.push(marker);
                 }
+            });
+
+            if (markers.length > 0) {
+                overlays[category] = L.layerGroup(markers);
             }
         });
 
         Object.values(overlays).forEach((layer) => layer.addTo(map));
+
         layerControl = L.control.layers(undefined, overlays).addTo(map);
 
         // Auto-fit only once

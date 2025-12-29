@@ -17,20 +17,21 @@
 
   const clamp01 = (x: number) => Math.max(0, Math.min(1, x));
 
-  const flatten = (m: WindHeatmapCell[][]): number[] =>
-    m.flatMap((r) => r.filter((v): v is number => typeof v === "number" && !Number.isNaN(v)));
-
-  const values = $derived(flatten(grid));
-  const max = $derived(values.length ? Math.max(...values) : 0);
-  const min = $derived(values.length ? Math.min(...values) : 0);
 
   const colorFor = (v: WindHeatmapCell) => {
-    if (v === null || Number.isNaN(v) || max <= 0) {
+    if (v === null || Number.isNaN(v)) {
       return "#f5f5f5";
     }
 
-    // Normalize into 0..1, bias slightly towards highlighting high winds.
-    const t = clamp01((v - min) / (max - min || 1));
+    // Determine max scale based on unit
+    let maxScale = 60; // Default (km/h)
+    const u = (unit || "").toLowerCase();
+    if (u.includes("m/s")) maxScale = 20;
+    else if (u.includes("mph")) maxScale = 40;
+    else if (u.includes("kn")) maxScale = 30;
+
+    // Normalize based on absolute scale
+    const t = clamp01(v / maxScale);
     const eased = Math.pow(t, 0.6);
 
     // Red scale (light -> strong red)
@@ -72,7 +73,7 @@
   <div class="wind-heatmap__legend">
     <span>Calm</span>
     <div class="wind-heatmap__legend-bar"></div>
-    <span>Windiest{#if unit} ({unit}){/if}</span>
+    <span>Strong{#if unit} ({unit}){/if}</span>
   </div>
 </div>
 
@@ -80,8 +81,8 @@
   .wind-heatmap__header,
   .wind-heatmap__row {
     display: grid;
-    grid-template-columns: 44px repeat(var(--days), minmax(34px, 1fr));
-    gap: 6px;
+    grid-template-columns: 30px repeat(var(--days), minmax(24px, 1fr));
+    gap: 2px;
     align-items: center;
   }
 
@@ -94,20 +95,20 @@
   }
 
   .wind-heatmap__day {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     font-weight: 600;
     text-align: center;
     color: #4a4a4a;
   }
 
   .wind-heatmap__body {
-    margin-top: 10px;
+    margin-top: 5px;
     display: grid;
-    gap: 6px;
+    gap: 2px;
   }
 
   .wind-heatmap__hour {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     font-weight: 600;
     text-align: right;
     padding-right: 4px;
@@ -115,13 +116,13 @@
   }
 
   .wind-heatmap__cell {
-    height: 26px;
-    border-radius: 6px;
+    height: 20px;
+    border-radius: 3px;
     border: 1px solid rgba(0, 0, 0, 0.06);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.7rem;
+    font-size: 0.65rem;
     line-height: 1;
     user-select: none;
   }
@@ -132,17 +133,17 @@
   }
 
   .wind-heatmap__legend {
-    margin-top: 10px;
+    margin-top: 8px;
     display: flex;
     align-items: center;
-    gap: 10px;
-    font-size: 0.75rem;
+    gap: 8px;
+    font-size: 0.7rem;
     color: #4a4a4a;
   }
 
   .wind-heatmap__legend-bar {
     flex: 1;
-    height: 10px;
+    height: 8px;
     border-radius: 999px;
     background: linear-gradient(90deg, rgb(255,245,245), rgb(255,0,0));
     border: 1px solid rgba(0, 0, 0, 0.06);

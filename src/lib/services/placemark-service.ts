@@ -1,6 +1,6 @@
 import axios, {type AxiosError} from "axios";
 
-import type {User, RegisterData, Session} from "$lib/types/placemark-types";
+import type {User, RegisterData, Session, Placemark} from "$lib/types/placemark-types";
 import {loggedInUser, setApiError} from "$lib/runes.svelte";
 
 // Helper function to clear session (used by interceptor and service)
@@ -206,6 +206,37 @@ export const placemarkService = {
         }
     },
 
+    async createPlacemark(placemark: Placemark) {
+        try {
+            const response = await axios.post(`${this.baseUrl}/api/placemarks`, placemark);
+            return response.data;
+        } catch (error) {
+            this.handleError(error);
+            return null;
+        }
+    },
+
+    async deletePlacemark(id: string) {
+        try {
+            const response = await axios.delete(`${this.baseUrl}/api/placemarks/${id}`);
+            console.log('deletePlacemark response:', response);
+            return response.status === 204 || response.status === 200;
+        } catch (error) {
+            this.handleError(error);
+            return false;
+        }
+    },
+
+    async updatePlacemark(id: string, placemark: Placemark) {
+        try {
+            const response = await axios.put(`${this.baseUrl}/api/placemarks/${id}`, placemark);
+            return response.data;
+        } catch (error) {
+            this.handleError(error);
+            return null;
+        }
+    },
+
     handleError(error: any) {
         const e = error as AxiosError;
         const status = e.response?.status;
@@ -214,7 +245,12 @@ export const placemarkService = {
 
         switch (status) {
             case 400:
-                message = 'Invalid request. Please check your input.';
+                if (e.response?.data && (e.response.data as any).message) {
+                    message = (e.response.data as any).message;
+                    console.log(message);
+                } else {
+                    message = 'Invalid request. Please check your input.';
+                }
                 break;
             case 401:
                 clearSessionData();
