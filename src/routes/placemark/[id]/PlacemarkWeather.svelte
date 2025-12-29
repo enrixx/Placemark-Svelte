@@ -57,12 +57,6 @@
     $effect(() => {
         processWeatherData();
     });
-
-    const hasWeatherData = $derived(
-        pastTempChartData || futureTempChartData ||
-        pastRainChartData || futureRainChartData ||
-        windHeatmapGrid.length > 0
-    );
 </script>
 
 <WeatherCharts
@@ -76,9 +70,4 @@
         {windHeatmapUnit}
 />
 
-{#if !hasWeatherData}
-    <div class="notification is-warning">
-        Weather data not available.
-    </div>
-{/if}
 

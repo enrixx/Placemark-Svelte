@@ -1,11 +1,14 @@
 <script lang="ts">
-    import { onMount } from 'svelte';
-    import type { Placemark } from '$lib/types/placemark-types';
-    import { browser } from '$app/environment';
+    import {onMount} from 'svelte';
+    import type {Placemark} from '$lib/types/placemark-types';
+    import {browser} from '$app/environment';
     import 'leaflet/dist/leaflet.css';
-    import { mapState, persistMapState, restoreMapState } from '$lib/runes.svelte';
+    import {mapState, persistMapState, restoreMapState} from '$lib/runes.svelte';
 
-    let { placemarks, tileLayerUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png' } = $props<{ placemarks: Placemark[], tileLayerUrl?: string }>();
+    let {placemarks, tileLayerUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'} = $props<{
+        placemarks: Placemark[],
+        tileLayerUrl?: string
+    }>();
 
     let map: any;
     let mapElement: HTMLElement;
@@ -39,7 +42,7 @@
                 }
                 const center = map.getCenter();
                 const zoom = map.getZoom();
-                mapState.location = { lat: center.lat, lng: center.lng };
+                mapState.location = {lat: center.lat, lng: center.lng};
                 mapState.zoom = zoom;
                 persistMapState();
             };
@@ -68,7 +71,7 @@
 
         if (dist > 1 || currentZoom !== mapState.zoom) {
             isProgrammaticMove = true;
-            map.setView([mapState.location.lat, mapState.location.lng], mapState.zoom, { animate: false });
+            map.setView([mapState.location.lat, mapState.location.lng], mapState.zoom, {animate: false});
         }
     });
 
@@ -111,7 +114,7 @@
                     `;
                     marker.bindPopup(popupContent);
                     marker.on('click', () => {
-                        mapState.location = { lat: placemark.latitude, lng: placemark.longitude };
+                        mapState.location = {lat: placemark.latitude, lng: placemark.longitude};
                         mapState.zoom = 15;
                         mapState.selectedPlacemarkId = placemark._id || "";
                         persistMapState();
@@ -137,7 +140,7 @@
                 hasFitBounds = true;
                 map.fitBounds(group.getBounds());
                 const center = map.getCenter();
-                mapState.location = { lat: center.lat, lng: center.lng };
+                mapState.location = {lat: center.lat, lng: center.lng};
                 mapState.zoom = map.getZoom();
                 persistMapState();
             }
