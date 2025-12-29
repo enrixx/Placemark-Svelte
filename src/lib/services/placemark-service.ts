@@ -237,6 +237,27 @@ export const placemarkService = {
         }
     },
 
+    async updateUser(userId: string, updates: { firstName?: string; lastName?: string; email?: string; password?: string }) {
+        try {
+            const response = await axios.put(`${this.baseUrl}/api/users/${userId}`, updates);
+            if (response.data) {
+                // Update the session with new data (but keep the token)
+                const currentToken = loggedInUser.token;
+                loggedInUser.email = response.data.email;
+                loggedInUser.firstName = response.data.firstName;
+                loggedInUser.lastName = response.data.lastName;
+                loggedInUser._id = response.data._id;
+                loggedInUser.role = response.data.role;
+                loggedInUser.token = currentToken;
+                localStorage.setItem("placemark", JSON.stringify(loggedInUser));
+            }
+            return response.data;
+        } catch (error) {
+            this.handleError(error);
+            return null;
+        }
+    },
+
     handleError(error: any) {
         const e = error as AxiosError;
         const status = e.response?.status;
