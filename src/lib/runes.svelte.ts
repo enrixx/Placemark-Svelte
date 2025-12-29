@@ -1,4 +1,4 @@
-import type { Placemark } from "$lib/types/placemark-types";
+import type {Placemark} from "$lib/types/placemark-types";
 
 export const loggedInUser = $state({
     email: "",
@@ -8,6 +8,24 @@ export const loggedInUser = $state({
     _id: "",
     role: ""
 });
+
+export const apiError = $state({
+    message: "",
+    statusCode: 0,
+    timestamp: 0
+});
+
+export function setApiError(message: string, statusCode: number = 0) {
+    apiError.message = message;
+    apiError.statusCode = statusCode;
+    apiError.timestamp = Date.now();
+}
+
+export function clearApiError() {
+    apiError.message = "";
+    apiError.statusCode = 0;
+    apiError.timestamp = 0;
+}
 
 export const subTitle = $state({
     text: ""
@@ -20,7 +38,7 @@ export const currentPlacemarks = $state({
 });
 
 export const mapState = $state({
-    location: { lat: 49.0134, lng: 12.1016 },
+    location: {lat: 49.0134, lng: 12.1016},
     zoom: 12,
     selectedPlacemarkId: ""
 });
@@ -41,7 +59,7 @@ export function restoreMapState() {
             typeof parsed.location.lng === "number" &&
             typeof parsed.zoom === "number"
         ) {
-            mapState.location = { lat: parsed.location.lat, lng: parsed.location.lng };
+            mapState.location = {lat: parsed.location.lat, lng: parsed.location.lng};
             mapState.zoom = parsed.zoom;
             mapState.selectedPlacemarkId = typeof parsed.selectedPlacemarkId === "string" ? parsed.selectedPlacemarkId : "";
         }
