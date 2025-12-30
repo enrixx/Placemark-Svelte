@@ -11,6 +11,7 @@ function clearSessionData() {
     loggedInUser.token = "";
     loggedInUser._id = "";
     loggedInUser.role = "";
+    loggedInUser.isOAuth = false;
     if (typeof window !== 'undefined') {
         localStorage.removeItem("placemark");
     }
@@ -57,6 +58,7 @@ export const placemarkService = {
                         firstName: payload.firstName,
                         lastName: payload.lastName,
                         role: payload.role,
+                        isOAuth: payload.isOAuth
                     }
                 };
                 return session;
@@ -88,7 +90,7 @@ export const placemarkService = {
                         firstName: payload.firstName,
                         lastName: payload.lastName,
                         role: payload.role,
-                        isOAuth: true
+                        isOAuth: payload.isOAuth
                     }
                 };
                 return session;

@@ -48,7 +48,12 @@
 </script>
 
 <div class="profile-form-card">
-    <form class="modern-form" method="POST" use:enhance={() => {
+    <form class="modern-form" method="POST" use:enhance={({ cancel }) => {
+        if (showPasswordSection && newPassword && newPassword !== confirmPassword) {
+            errorMessage = 'Passwords do not match';
+            cancel();
+            return;
+        }
         loading = true;
         errorMessage = '';
         successMessage = '';

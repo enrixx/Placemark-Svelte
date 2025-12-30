@@ -19,6 +19,7 @@
             loggedInUser.token = data.token;
             loggedInUser._id = data.user._id;
             loggedInUser.role = data.user.role;
+            loggedInUser.isOAuth = data.user.isOAuth || false;
             import('axios').then(axios => {
                 axios.default.defaults.headers.common["Authorization"] = "Bearer " + data.token;
             });
@@ -29,6 +30,7 @@
             loggedInUser.token = "";
             loggedInUser._id = "";
             loggedInUser.role = "";
+            loggedInUser.isOAuth = false;
             import('axios').then(axios => {
                 delete axios.default.defaults.headers.common["Authorization"];
             });

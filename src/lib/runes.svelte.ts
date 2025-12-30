@@ -6,7 +6,8 @@ export const loggedInUser = $state({
     lastName: "",
     token: "",
     _id: "",
-    role: ""
+    role: "",
+    isOAuth: false
 });
 
 export const apiError = $state({
