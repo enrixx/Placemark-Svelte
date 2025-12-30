@@ -1,5 +1,5 @@
 import {redirect} from '@sveltejs/kit';
-import {GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET} from '$env/dynamic/private';
+import {env} from '$env/dynamic/private';
 import {placemarkService} from '$lib/services/placemark-service';
 
 export const GET = async ({url, cookies}) => {
@@ -15,8 +15,8 @@ export const GET = async ({url, cookies}) => {
             Accept: 'application/json'
         },
         body: JSON.stringify({
-            client_id: GITHUB_CLIENT_ID,
-            client_secret: GITHUB_CLIENT_SECRET,
+            client_id: env.GITHUB_CLIENT_ID,
+            client_secret: env.GITHUB_CLIENT_SECRET,
             code
         })
     });

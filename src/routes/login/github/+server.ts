@@ -1,8 +1,8 @@
-import { redirect } from '@sveltejs/kit';
-import { GITHUB_CLIENT_ID } from '$env/dynamic/private';
+import {redirect} from '@sveltejs/kit';
+import {env} from '$env/dynamic/private';
 
-export const GET = async ({ url }) => {
-    const clientId = GITHUB_CLIENT_ID;
+export const GET = async ({url}) => {
+    const clientId = env.GITHUB_CLIENT_ID;
     const redirectUri = `${url.origin}/login/github/callback`;
     const scope = 'user:email';
 
