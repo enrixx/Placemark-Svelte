@@ -22,6 +22,7 @@
         </label>
         <input
                 id="firstName"
+                name="firstName"
                 class="field-input"
                 type="text"
                 placeholder="Enter first name"
@@ -37,6 +38,7 @@
         </label>
         <input
                 id="lastName"
+                name="lastName"
                 class="field-input"
                 type="text"
                 placeholder="Enter last name"
@@ -53,6 +55,7 @@
     </label>
     <input
             id="email"
+            name="email"
             class="field-input"
             type="email"
             placeholder="Enter your email"
@@ -68,6 +71,7 @@
     </label>
     <input
             id="password"
+            name="password"
             class="field-input"
             type="password"
             placeholder="At least 6 characters"

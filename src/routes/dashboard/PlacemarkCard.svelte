@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { enhance } from '$app/forms';
     import type {Placemark} from '$lib/types/placemark-types';
 
     interface Props {
@@ -6,10 +7,9 @@
         isSelected: boolean;
         canEditOrDelete: boolean;
         onSelect: () => void;
-        onDelete: () => void;
     }
 
-    let {placemark, isSelected, canEditOrDelete, onSelect, onDelete}: Props = $props();
+    let {placemark, isSelected, canEditOrDelete, onSelect}: Props = $props();
 
     let hasImages = $derived(placemark.images && placemark.images.length > 0);
     let firstImage = $derived(hasImages ? placemark.images![0].url : null);
@@ -78,14 +78,27 @@
             <span>View Details</span>
         </a>
         {#if canEditOrDelete}
-            <button
-                    class="footer-button danger"
-                    onclick={onDelete}
-                    type="button"
-            >
-                <i class="fas fa-trash"></i>
-                <span>Delete</span>
-            </button>
+            <form action="?/delete" method="POST" use:enhance={() => {
+                return async ({ result }) => {
+                    if (result.type === 'success') {
+                        // Optional: trigger a refresh or let SSR handle it
+                    }
+                };
+            }} style="display: inline;">
+                <input type="hidden" name="id" value={placemark._id} />
+                <button
+                        class="footer-button danger"
+                        type="submit"
+                        onclick={(e) => {
+                            if (!confirm("Are you sure you want to delete this placemark?")) {
+                                e.preventDefault();
+                            }
+                        }}
+                >
+                    <i class="fas fa-trash"></i>
+                    <span>Delete</span>
+                </button>
+            </form>
         {/if}
     </div>
 </div>

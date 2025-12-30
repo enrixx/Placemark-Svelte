@@ -14,6 +14,7 @@
     </label>
     <input
             id="email"
+            name="email"
             class="field-input"
             type="email"
             placeholder="Enter your email"
@@ -29,6 +30,7 @@
     </label>
     <input
             id="password"
+            name="password"
             class="field-input"
             type="password"
             placeholder="Enter your password"

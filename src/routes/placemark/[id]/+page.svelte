@@ -1,44 +1,33 @@
 <script lang="ts">
-    import {onMount} from 'svelte';
-    import {page} from '$app/state';
-    import {goto} from '$app/navigation';
-    import {loggedInUser} from '$lib/runes.svelte';
-    import {placemarkService} from '$lib/services/placemark-service';
+    import {invalidateAll} from '$app/navigation';
     import type {Placemark, WeatherResponse} from '$lib/types/placemark-types';
     import PlacemarkDetails from './PlacemarkDetails.svelte';
     import PlacemarkImages from './PlacemarkImages.svelte';
     import PlacemarkWeather from './PlacemarkWeather.svelte';
+    import type {PageData} from './$types';
+
+    let { data }: { data: PageData } = $props();
 
     let placemark = $state<Placemark | null>(null);
     let weatherData = $state<WeatherResponse | null>(null);
     let activeTab = $state<'details' | 'weather'>('details');
 
-    async function refreshPlacemark() {
-        if (!placemark?._id) return;
-        const updated = await placemarkService.getPlacemarkById(placemark._id);
-        if (updated) {
-            placemark = updated;
+    $effect(() => {
+        if (data.placemark) {
+            placemark = data.placemark;
         }
+        if (data.weather) {
+            weatherData = data.weather;
+        }
+    });
+
+    async function refreshPlacemark() {
+        await invalidateAll();
     }
 
     function handlePlacemarkUpdate(updated: Placemark) {
         placemark = updated;
     }
-
-    onMount(async () => {
-        await placemarkService.restoreSession();
-
-        if (!loggedInUser.token) {
-            goto('/login');
-            return;
-        }
-
-        const placemarkId = page.params.id as string;
-        placemark = await placemarkService.getPlacemarkById(placemarkId);
-        if (!placemark) return;
-
-        weatherData = await placemarkService.getWeather(placemarkId);
-    });
 </script>
 
 <svelte:head>
@@ -81,6 +70,7 @@
                 <PlacemarkImages
                         placemarkId={placemark._id || ''}
                         images={placemark.images || []}
+                        user={data.user}
                         onImageChange={refreshPlacemark}
                 />
             </div>
@@ -109,7 +99,7 @@
                 <div class="tab-content">
                     {#if activeTab === 'details'}
                         <div class="tab-panel" style="animation: fadeIn 0.3s ease;">
-                            <PlacemarkDetails {placemark} onUpdate={handlePlacemarkUpdate}/>
+                            <PlacemarkDetails {placemark} user={data.user} onUpdate={handlePlacemarkUpdate}/>
                         </div>
                     {:else}
                         <div class="tab-panel" style="animation: fadeIn 0.3s ease;">

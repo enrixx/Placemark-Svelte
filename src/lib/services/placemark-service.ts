@@ -18,6 +18,13 @@ function clearSessionData() {
 export const placemarkService = {
     baseUrl: "http://localhost:3000", // ToDo: move it to env
 
+    getAxiosConfig(token?: string) {
+        if (token) {
+            return { headers: { Authorization: `Bearer ${token}` } };
+        }
+        return {};
+    },
+
     async signup(user: RegisterData): Promise<boolean> {
         try {
             const response = await axios.post(`${this.baseUrl}/api/users`, user);
@@ -36,7 +43,9 @@ export const placemarkService = {
             });
 
             if (response.data.success) {
-                axios.defaults.headers.common["Authorization"] = "Bearer " + response.data.token;
+                if (typeof window !== 'undefined') {
+                    axios.defaults.headers.common["Authorization"] = "Bearer " + response.data.token;
+                }
                 const payload = JSON.parse(atob(response.data.token.split('.')[1]));
                 const session: Session = {
                     user: {
@@ -59,6 +68,7 @@ export const placemarkService = {
     },
 
     saveSession(session: Session) {
+        if (typeof localStorage === 'undefined') return;
         loggedInUser.email = session.user.email;
         loggedInUser.firstName = session.user.firstName;
         loggedInUser.lastName = session.user.lastName;
@@ -69,6 +79,7 @@ export const placemarkService = {
     },
 
     async restoreSession() {
+        if (typeof localStorage === 'undefined') return;
         try {
             const savedLoggedInUser = localStorage.getItem("placemark");
             if (!savedLoggedInUser) {
@@ -109,12 +120,14 @@ export const placemarkService = {
     },
 
     clearSession() {
-        clearSessionData();
+        if (typeof window !== 'undefined') {
+            clearSessionData();
+        }
     },
 
-    async getUsers(): Promise<User[]> {
+    async getUsers(token?: string): Promise<User[]> {
         try {
-            const response = await axios.get(`${this.baseUrl}/api/users`);
+            const response = await axios.get(`${this.baseUrl}/api/users`, this.getAxiosConfig(token));
             return response.data;
         } catch (error) {
             this.handleError(error);
@@ -122,9 +135,9 @@ export const placemarkService = {
         }
     },
 
-    async getUserById(id: string): Promise<User | null> {
+    async getUserById(id: string, token?: string): Promise<User | null> {
         try {
-            const response = await axios.get(`${this.baseUrl}/api/users/${id}`);
+            const response = await axios.get(`${this.baseUrl}/api/users/${id}`, this.getAxiosConfig(token));
             return response.data;
         } catch (error) {
             this.handleError(error);
@@ -132,9 +145,9 @@ export const placemarkService = {
         }
     },
 
-    async getWeather(placemarkId: string) {
+    async getWeather(placemarkId: string, token?: string) {
         try {
-            const response = await axios.get(`${this.baseUrl}/api/placemarks/${placemarkId}/weather`);
+            const response = await axios.get(`${this.baseUrl}/api/placemarks/${placemarkId}/weather`, this.getAxiosConfig(token));
             return response.data;
         } catch (error) {
             this.handleError(error);
@@ -142,9 +155,9 @@ export const placemarkService = {
         }
     },
 
-    async getPlacemarks() {
+    async getPlacemarks(token?: string) {
         try {
-            const response = await axios.get(`${this.baseUrl}/api/placemarks`);
+            const response = await axios.get(`${this.baseUrl}/api/placemarks`, this.getAxiosConfig(token));
             return response.data;
         } catch (error) {
             this.handleError(error);
@@ -152,9 +165,9 @@ export const placemarkService = {
         }
     },
 
-    async getPlacemarkById(id: string) {
+    async getPlacemarkById(id: string, token?: string) {
         try {
-            const response = await axios.get(`${this.baseUrl}/api/placemarks/${id}`);
+            const response = await axios.get(`${this.baseUrl}/api/placemarks/${id}`, this.getAxiosConfig(token));
             return response.data;
         } catch (error) {
             this.handleError(error);
@@ -162,9 +175,9 @@ export const placemarkService = {
         }
     },
 
-    async getPlacemarksByUserId(userId: string) {
+    async getPlacemarksByUserId(userId: string, token?: string) {
         try {
-            const response = await axios.get(`${this.baseUrl}/api/users/${userId}/placemarks`);
+            const response = await axios.get(`${this.baseUrl}/api/users/${userId}/placemarks`, this.getAxiosConfig(token));
             return response.data;
         } catch (error) {
             this.handleError(error);
@@ -172,19 +185,17 @@ export const placemarkService = {
         }
     },
 
-    async uploadImage(placemarkId: string, imageFile: File) {
+    async uploadImage(placemarkId: string, imageFile: File, token?: string) {
         try {
             const formData = new FormData();
             formData.append("imagefile", imageFile);
 
+            const config = this.getAxiosConfig(token);
+
             const response = await axios.post(
                 `${this.baseUrl}/api/placemarks/${placemarkId}/images`,
                 formData,
-                {
-                    headers: {
-                        "Content-Type": "multipart/form-data",
-                    },
-                }
+                config
             );
             return response.data;
         } catch (error) {
@@ -193,10 +204,11 @@ export const placemarkService = {
         }
     },
 
-    async deleteImage(placemarkId: string, imageId: string) {
+    async deleteImage(placemarkId: string, imageId: string, token?: string) {
         try {
             const response = await axios.delete(
-                `${this.baseUrl}/api/placemarks/${placemarkId}/images/${imageId}`
+                `${this.baseUrl}/api/placemarks/${placemarkId}/images/${imageId}`,
+                this.getAxiosConfig(token)
             );
             return response.data;
         } catch (error) {
@@ -206,9 +218,9 @@ export const placemarkService = {
         }
     },
 
-    async createPlacemark(placemark: Placemark) {
+    async createPlacemark(placemark: Placemark, token?: string) {
         try {
-            const response = await axios.post(`${this.baseUrl}/api/placemarks`, placemark);
+            const response = await axios.post(`${this.baseUrl}/api/placemarks`, placemark, this.getAxiosConfig(token));
             return response.data;
         } catch (error) {
             this.handleError(error);
@@ -216,9 +228,9 @@ export const placemarkService = {
         }
     },
 
-    async deletePlacemark(id: string) {
+    async deletePlacemark(id: string, token?: string) {
         try {
-            const response = await axios.delete(`${this.baseUrl}/api/placemarks/${id}`);
+            const response = await axios.delete(`${this.baseUrl}/api/placemarks/${id}`, this.getAxiosConfig(token));
             console.log('deletePlacemark response:', response);
             return response.status === 204 || response.status === 200;
         } catch (error) {
@@ -227,9 +239,9 @@ export const placemarkService = {
         }
     },
 
-    async updatePlacemark(id: string, placemark: Placemark) {
+    async updatePlacemark(id: string, placemark: Placemark, token?: string) {
         try {
-            const response = await axios.put(`${this.baseUrl}/api/placemarks/${id}`, placemark);
+            const response = await axios.put(`${this.baseUrl}/api/placemarks/${id}`, placemark, this.getAxiosConfig(token));
             return response.data;
         } catch (error) {
             this.handleError(error);
@@ -237,10 +249,10 @@ export const placemarkService = {
         }
     },
 
-    async updateUser(userId: string, updates: { firstName?: string; lastName?: string; email?: string; password?: string }) {
+    async updateUser(userId: string, updates: { firstName?: string; lastName?: string; email?: string; password?: string }, token?: string) {
         try {
-            const response = await axios.put(`${this.baseUrl}/api/users/${userId}`, updates);
-            if (response.data) {
+            const response = await axios.put(`${this.baseUrl}/api/users/${userId}`, updates, this.getAxiosConfig(token));
+            if (response.data && typeof window !== 'undefined') {
                 // Update the session with new data (but keep the token)
                 const currentToken = loggedInUser.token;
                 loggedInUser.email = response.data.email;

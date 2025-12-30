@@ -1,17 +1,41 @@
 <script lang="ts">
+    import '../app.css';
     import {onMount} from 'svelte';
     import {goto} from '$app/navigation';
+    import {enhance} from '$app/forms';
     import {loggedInUser} from '$lib/runes.svelte';
-    import {placemarkService} from '$lib/services/placemark-service';
     import ErrorNotification from '$lib/ui/ErrorNotification.svelte';
 
-    let {children} = $props();
+    let {children, data} = $props();
 
     // theme stored via $state so assignments are reactive in this project
     let theme = $state('light');
 
+    $effect(() => {
+        if (data.user) {
+            loggedInUser.email = data.user.email;
+            loggedInUser.firstName = data.user.firstName;
+            loggedInUser.lastName = data.user.lastName;
+            loggedInUser.token = data.token;
+            loggedInUser._id = data.user._id;
+            loggedInUser.role = data.user.role;
+            import('axios').then(axios => {
+                axios.default.defaults.headers.common["Authorization"] = "Bearer " + data.token;
+            });
+        } else {
+            loggedInUser.email = "";
+            loggedInUser.firstName = "";
+            loggedInUser.lastName = "";
+            loggedInUser.token = "";
+            loggedInUser._id = "";
+            loggedInUser.role = "";
+            import('axios').then(axios => {
+                delete axios.default.defaults.headers.common["Authorization"];
+            });
+        }
+    });
+
     onMount(async () => {
-        await placemarkService.restoreSession();
         try {
             const saved = localStorage.getItem('theme');
             if (saved === 'dark' || saved === 'light') {
@@ -50,11 +74,6 @@
             };
         }
     });
-
-    function handleLogout() {
-        placemarkService.clearSession();
-        goto('/');
-    }
 </script>
 
 <ErrorNotification/>
@@ -72,7 +91,7 @@
 
         <div class="navbar-content">
             <div class="navbar-start">
-                {#if loggedInUser.token}
+                {#if data.user}
                     <a class="nav-link" href="/dashboard">
                         <i class="fas fa-th-large"></i>
                         <span>Dashboard</span>
@@ -90,16 +109,18 @@
 					</span>
                 </button>
 
-                {#if loggedInUser.token}
+                {#if data.user}
                     <button class="user-badge" onclick={() => goto('/profile')}>
                         <i class="fas fa-user-circle"></i>
-                        <span>{loggedInUser.firstName} {loggedInUser.lastName}</span>
+                        <span>{data.user.firstName} {data.user.lastName}</span>
                     </button>
 
-                    <button class="logout-button" onclick={handleLogout}>
-                        <i class="fas fa-sign-out-alt"></i>
-                        <span>Logout</span>
-                    </button>
+                    <form action="/logout" method="POST" use:enhance style="display: inline;">
+                        <button class="logout-button" type="submit">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Logout</span>
+                        </button>
+                    </form>
                 {:else}
                     <a class="nav-link" href="/login">
                         <i class="fas fa-sign-in-alt"></i>
@@ -138,7 +159,7 @@
                 <h4 class="footer-title">Quick Links</h4>
                 <ul class="footer-links">
                     <li><a href="/">Home</a></li>
-                    {#if loggedInUser.token}
+                    {#if data.user}
                         <li><a href="/dashboard">Dashboard</a></li>
                         <li><a href="/profile">Profile</a></li>
                     {:else}

@@ -1,16 +1,7 @@
 <script lang="ts">
-    import {onMount} from 'svelte';
-    import {goto} from '$app/navigation';
-    import {loggedInUser} from '$lib/runes.svelte';
-    import {placemarkService} from '$lib/services/placemark-service';
     import ProfileForm from './ProfileForm.svelte';
 
-    onMount(async () => {
-        await placemarkService.restoreSession();
-        if (!loggedInUser.token) {
-            await goto('/login');
-        }
-    });
+    let {data, form} = $props();
 </script>
 
 <div class="profile-page">
@@ -28,7 +19,7 @@
             </div>
         </div>
 
-        <ProfileForm />
+        <ProfileForm user={data.user} {form} />
     </div>
 </div>
 

@@ -1,83 +1,41 @@
 <script lang="ts">
-    import {loggedInUser, setApiError, clearApiError} from '$lib/runes.svelte';
-    import {placemarkService} from '$lib/services/placemark-service';
+    import { enhance } from '$app/forms';
+    import type {User} from '$lib/types/placemark-types';
 
-    let firstName = $state(loggedInUser.firstName);
-    let lastName = $state(loggedInUser.lastName);
-    let email = $state(loggedInUser.email);
+    let { user, form } = $props<{ user: User, form: any }>();
+
+    let firstName = $state('');
+    let lastName = $state('');
+    let email = $state('');
     let currentPassword = $state('');
     let newPassword = $state('');
     let confirmPassword = $state('');
     let loading = $state(false);
     let successMessage = $state('');
+    let errorMessage = $state('');
     let showPasswordSection = $state(false);
 
-    async function updateProfile() {
-        clearApiError();
-        successMessage = '';
+    // Update form fields when user data changes
+    $effect(() => {
+        firstName = user.firstName;
+        lastName = user.lastName;
+        email = user.email;
+    });
 
-        if (!firstName.trim() || !lastName.trim() || !email.trim()) {
-            setApiError('First name, last name, and email are required');
-            return;
+    $effect(() => {
+        if (form?.success) {
+            successMessage = form.message;
+            currentPassword = '';
+            newPassword = '';
+            confirmPassword = '';
+            showPasswordSection = false;
+            setTimeout(() => {
+                successMessage = '';
+            }, 3000);
+        } else if (form?.message) {
+            errorMessage = form.message;
         }
-
-        if (showPasswordSection) {
-            if (!currentPassword) {
-                setApiError('Current password is required to change password');
-                return;
-            }
-            if (newPassword && newPassword !== confirmPassword) {
-                setApiError('New passwords do not match');
-                return;
-            }
-            if (newPassword && newPassword.length < 6) {
-                setApiError('New password must be at least 6 characters');
-                return;
-            }
-        }
-
-        loading = true;
-
-        try {
-            const updates: any = {
-                firstName: firstName.trim(),
-                lastName: lastName.trim(),
-                email: email.trim(),
-            };
-
-            // Only include password if user is changing it
-            if (showPasswordSection && newPassword) {
-                // First verify current password by attempting to login
-                const loginCheck = await placemarkService.login(loggedInUser.email, currentPassword);
-                if (!loginCheck) {
-                    setApiError('Current password is incorrect');
-                    loading = false;
-                    return;
-                }
-                updates.password = newPassword;
-            }
-
-            const result = await placemarkService.updateUser(loggedInUser._id, updates);
-
-            if (result) {
-                successMessage = 'Profile updated successfully!';
-                // Reset password fields
-                currentPassword = '';
-                newPassword = '';
-                confirmPassword = '';
-                showPasswordSection = false;
-
-                // Clear success message after 3 seconds
-                setTimeout(() => {
-                    successMessage = '';
-                }, 3000);
-            }
-        } catch (error) {
-            console.error('Error updating profile:', error);
-        } finally {
-            loading = false;
-        }
-    }
+    });
 
     function togglePasswordSection() {
         showPasswordSection = !showPasswordSection;
@@ -90,7 +48,15 @@
 </script>
 
 <div class="profile-form-card">
-    <form class="modern-form" onsubmit={(e) => { e.preventDefault(); updateProfile(); }}>
+    <form class="modern-form" method="POST" use:enhance={() => {
+        loading = true;
+        errorMessage = '';
+        successMessage = '';
+        return async ({ update }) => {
+            loading = false;
+            await update();
+        };
+    }}>
         <div class="form-section">
             <h2 class="section-title">
                 <i class="fas fa-user"></i>
@@ -104,6 +70,7 @@
                 </label>
                 <input
                         id="firstName"
+                        name="firstName"
                         type="text"
                         bind:value={firstName}
                         placeholder="Enter your first name"
@@ -118,6 +85,7 @@
                 </label>
                 <input
                         id="lastName"
+                        name="lastName"
                         type="text"
                         bind:value={lastName}
                         placeholder="Enter your last name"
@@ -132,6 +100,7 @@
                 </label>
                 <input
                         id="email"
+                        name="email"
                         type="email"
                         bind:value={email}
                         placeholder="Enter your email"
@@ -148,7 +117,7 @@
                 </h2>
                 <button
                         type="button"
-                        class="toggle-button"
+                        class="btn-primary-sm"
                         onclick={togglePasswordSection}
                 >
                     {showPasswordSection ? 'Cancel' : 'Change Password'}
@@ -164,6 +133,7 @@
                         </label>
                         <input
                                 id="currentPassword"
+                                name="currentPassword"
                                 type="password"
                                 bind:value={currentPassword}
                                 placeholder="Enter current password"
@@ -178,6 +148,7 @@
                         </label>
                         <input
                                 id="newPassword"
+                                name="newPassword"
                                 type="password"
                                 bind:value={newPassword}
                                 placeholder="Enter new password"
@@ -209,7 +180,14 @@
             </div>
         {/if}
 
-        <button type="submit" class="submit-button" disabled={loading}>
+        {#if errorMessage}
+             <div class="error-message" style="color: red; padding: 1rem; background: #ffebee; border-radius: 8px;">
+                <i class="fas fa-exclamation-circle"></i>
+                {errorMessage}
+            </div>
+        {/if}
+
+        <button type="submit" class="btn-primary w-full" disabled={loading} style="margin-top: 1rem;">
             {#if loading}
                 <i class="fas fa-spinner fa-spin"></i>
                 Updating...
@@ -273,23 +251,6 @@
         color: var(--primary-color, #3498db);
     }
 
-    .toggle-button {
-        padding: 0.75rem 1.25rem;
-        border: none;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border-radius: 10px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        font-size: 0.95rem;
-    }
-
-    .toggle-button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
-    }
-
     .password-section {
         display: flex;
         flex-direction: column;
@@ -338,33 +299,6 @@
         box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
     }
 
-    .submit-button {
-        padding: 1rem 2rem;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border: none;
-        border-radius: 10px;
-        font-size: 1.1rem;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.5rem;
-        margin-top: 1rem;
-    }
-
-    .submit-button:hover:not(:disabled) {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
-    }
-
-    .submit-button:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-    }
-
     .success-message {
         padding: 1rem 1.5rem;
         background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
@@ -379,17 +313,6 @@
 
     .success-message i {
         font-size: 1.2rem;
-    }
-
-    @keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translateY(30px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
     }
 
     @keyframes slideDown {
@@ -419,7 +342,7 @@
             align-items: flex-start;
         }
 
-        .toggle-button {
+        .btn-primary-sm {
             width: 100%;
         }
     }

@@ -1,14 +1,15 @@
 <script lang="ts">
-    import type {Placemark} from '$lib/types/placemark-types';
-    import {loggedInUser} from '$lib/runes.svelte';
-    import {placemarkService} from '$lib/services/placemark-service';
+    import {enhance} from '$app/forms';
+    import type {ActionResult} from '@sveltejs/kit';
+    import type {Placemark, User} from '$lib/types/placemark-types';
 
     interface Props {
         placemark: Placemark;
+        user: User;
         onUpdate?: (updated: Placemark) => void;
     }
 
-    let {placemark, onUpdate}: Props = $props();
+    let {placemark, user, onUpdate}: Props = $props();
 
     let isEditing = $state(false);
     let editName = $state("");
@@ -16,9 +17,11 @@
     let editDescription = $state("");
     let editLatitude = $state(0);
     let editLongitude = $state(0);
+    let loading = $state(false);
 
     function canEditOrDelete(p: Placemark) {
-        return loggedInUser.role === 'admin' || loggedInUser._id === p.userid;
+        if (!user) return false;
+        return user.role === 'admin' || user._id === p.userid;
     }
 
     function startEditing() {
@@ -34,21 +37,13 @@
         isEditing = false;
     }
 
-    async function savePlacemark() {
-        if (!placemark?._id) return;
-
-        const updatedData = {
-            name: editName,
-            categoryName: editCategoryName,
-            description: editDescription,
-            latitude: editLatitude,
-            longitude: editLongitude
-        };
-
-        const updated = await placemarkService.updatePlacemark(placemark._id, updatedData);
-        if (updated) {
+    function handleUpdateResult(result: ActionResult) {
+        loading = false;
+        if (result.type === 'success') {
             isEditing = false;
-            onUpdate?.(updated);
+            if (result.data?.placemark) {
+                onUpdate?.(result.data.placemark as unknown as Placemark);
+            }
         }
     }
 </script>
@@ -62,7 +57,14 @@
             </h2>
         </div>
 
-        <form onsubmit={(e) => { e.preventDefault(); savePlacemark(); }}>
+        <form
+                action="?/updatePlacemark"
+                method="POST"
+                use:enhance={() => {
+                    loading = true;
+                    return async ({ result }) => handleUpdateResult(result);
+                }}
+        >
             <div class="form-grid">
                 <div class="form-field full-width">
                     <label class="field-label" for="editName">
@@ -71,6 +73,7 @@
                     </label>
                     <input
                             id="editName"
+                            name="name"
                             class="field-input"
                             type="text"
                             bind:value={editName}
@@ -86,6 +89,7 @@
                     </label>
                     <input
                             id="editCategory"
+                            name="categoryName"
                             class="field-input"
                             type="text"
                             bind:value={editCategoryName}
@@ -101,6 +105,7 @@
                     </label>
                     <textarea
                             id="editDescription"
+                            name="description"
                             class="field-textarea"
                             bind:value={editDescription}
                             placeholder="Enter description"
@@ -115,6 +120,7 @@
                     </label>
                     <input
                             id="editLat"
+                            name="latitude"
                             class="field-input"
                             type="number"
                             step="any"
@@ -131,6 +137,7 @@
                     </label>
                     <input
                             id="editLng"
+                            name="longitude"
                             class="field-input"
                             type="number"
                             step="any"
@@ -142,11 +149,16 @@
             </div>
 
             <div class="form-actions">
-                <button class="action-button primary" type="submit">
-                    <i class="fas fa-save"></i>
-                    Save Changes
+                <button class="btn-primary" type="submit" disabled={loading}>
+                    {#if loading}
+                        <i class="fas fa-spinner fa-spin"></i>
+                        Saving...
+                    {:else}
+                        <i class="fas fa-save"></i>
+                        Save Changes
+                    {/if}
                 </button>
-                <button class="action-button secondary" type="button" onclick={cancelEditing}>
+                <button class="btn-light" type="button" onclick={cancelEditing} disabled={loading}>
                     <i class="fas fa-times"></i>
                     Cancel
                 </button>
@@ -282,40 +294,6 @@
         gap: 1rem;
     }
 
-    .action-button {
-        flex: 1;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.5rem;
-        padding: 1rem 2rem;
-        border: none;
-        border-radius: 12px;
-        font-size: 1rem;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
-
-    .action-button.primary {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-    }
-
-    .action-button.primary:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
-    }
-
-    .action-button.secondary {
-        background: #f5f5f5;
-        color: #666;
-    }
-
-    .action-button.secondary:hover {
-        background: #e0e0e0;
-    }
-
     /* View Mode */
     .view-header {
         display: flex;
@@ -434,10 +412,6 @@
 
         .form-actions {
             flex-direction: column;
-        }
-
-        .action-button {
-            width: 100%;
         }
 
         .view-header {

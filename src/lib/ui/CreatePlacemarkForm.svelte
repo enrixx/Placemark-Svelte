@@ -1,7 +1,5 @@
 <script lang="ts">
-    import { placemarkService } from '$lib/services/placemark-service';
-    import { refreshPlacemarkState } from '$lib/services/placemark-utils';
-    import { apiError } from '$lib/runes.svelte';
+    import { enhance } from '$app/forms';
     import type { Placemark } from '$lib/types/placemark-types';
 
     interface Props {
@@ -16,36 +14,28 @@
     let latitude = $state(0);
     let longitude = $state(0);
     let errorMessage = $state("");
+    let loading = $state(false);
+</script>
 
-    async function createPlacemark() {
-        errorMessage = "";
-
-        const placemark = {
-            name,
-            categoryName,
-            description,
-            latitude,
-            longitude
-        };
-
-        const result = await placemarkService.createPlacemark(placemark);
-        if (result) {
-            await refreshPlacemarkState();
+<form class="modern-form" method="POST" action="?/create" use:enhance={() => {
+    loading = true;
+    errorMessage = "";
+    return async ({ result }) => {
+        loading = false;
+        if (result.type === 'success') {
             name = "";
             categoryName = "";
             description = "";
             latitude = 0;
             longitude = 0;
-            if (onSuccess) {
-                onSuccess(result);
+            if (onSuccess && result.data?.placemark) {
+                onSuccess(result.data.placemark);
             }
-        } else {
-            errorMessage = apiError.message || "Failed to create placemark";
+        } else if (result.type === 'failure') {
+            errorMessage = result.data?.message || "Failed to create placemark";
         }
-    }
-</script>
-
-<form class="modern-form" onsubmit={(e) => { e.preventDefault(); createPlacemark(); }}>
+    };
+}}>
     <div class="form-grid">
         <div class="form-field full-width">
             <label class="field-label" for="name">
@@ -54,6 +44,7 @@
             </label>
             <input
                 id="name"
+                name="name"
                 class="field-input"
                 type="text"
                 placeholder="Enter placemark name"
@@ -68,7 +59,8 @@
                 <span>Category</span>
             </label>
             <input
-                id="category"
+                id="categoryName"
+                name="categoryName"
                 class="field-input"
                 type="text"
                 placeholder="Enter category name"
@@ -84,6 +76,7 @@
             </label>
             <textarea
                 id="description"
+                name="description"
                 class="field-textarea"
                 placeholder="Enter description"
                 bind:value={description}
@@ -98,6 +91,7 @@
             </label>
             <input
                 id="latitude"
+                name="latitude"
                 class="field-input no-spinner"
                 type="number"
                 step="any"
@@ -116,6 +110,7 @@
             </label>
             <input
                 id="longitude"
+                name="longitude"
                 class="field-input no-spinner"
                 type="number"
                 step="any"
@@ -135,7 +130,7 @@
         </div>
     {/if}
 
-    <button class="submit-button" type="submit">
+    <button class="btn-primary w-full" type="submit">
         <i class="fas fa-plus-circle"></i>
         <span>Create Placemark</span>
     </button>
@@ -222,33 +217,6 @@
         font-size: 1.25rem;
     }
 
-    .submit-button {
-        width: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.75rem;
-        padding: 1rem 2rem;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border: none;
-        border-radius: 12px;
-        font-size: 1.1rem;
-        font-weight: 700;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-    }
-
-    .submit-button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
-    }
-
-    .submit-button i {
-        font-size: 1.25rem;
-    }
-
     /* Hide number input arrows */
     .no-spinner::-webkit-outer-spin-button,
     .no-spinner::-webkit-inner-spin-button {
@@ -272,11 +240,6 @@
         .field-textarea {
             padding: 0.75rem;
             font-size: 0.95rem;
-        }
-
-        .submit-button {
-            padding: 0.875rem 1.5rem;
-            font-size: 1rem;
         }
     }
 </style>

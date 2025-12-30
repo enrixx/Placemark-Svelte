@@ -1,5 +1,7 @@
 <script lang="ts">
     import LoginForm from "./LoginForm.svelte";
+
+    let {data, form} = $props();
 </script>
 
 <svelte:head>
@@ -16,7 +18,7 @@
                 <h1 class="auth-title">Welcome Back</h1>
                 <p class="auth-subtitle">Sign in to your PlacemarkCORE account</p>
             </div>
-            <LoginForm/>
+            <LoginForm {form}/>
             <div class="auth-footer">
                 <p>Don't have an account? <a href="/register" class="auth-link">Sign up</a></p>
             </div>
