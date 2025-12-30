@@ -1,5 +1,5 @@
 import { redirect } from '@sveltejs/kit';
-import { GITHUB_CLIENT_ID } from '$env/static/private';
+import { GITHUB_CLIENT_ID } from '$env/dynamic/private';
 
 export const GET = async ({ url }) => {
     const clientId = GITHUB_CLIENT_ID;
