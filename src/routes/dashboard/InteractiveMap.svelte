@@ -222,4 +222,31 @@
     :global(.popup-content) {
         font-family: inherit;
     }
+
+    /* Dark Mode for Leaflet Popups */
+    :global(html[data-theme="dark"] .leaflet-popup-content-wrapper),
+    :global(html[data-theme="dark"] .leaflet-popup-tip) {
+        background-color: var(--card-bg, #2d2d2d) !important;
+        color: var(--text-primary, #e0e0e0) !important;
+    }
+
+    :global(html[data-theme="dark"] .popup-content h3) {
+        color: var(--text-primary, #e0e0e0) !important;
+    }
+
+    :global(html[data-theme="dark"] .popup-content p) {
+        color: var(--text-secondary, #b0b0b0) !important;
+    }
+
+    :global(html[data-theme="dark"] .popup-content strong) {
+        color: var(--text-primary, #e0e0e0) !important;
+    }
+
+    :global(html[data-theme="dark"] .popup-content a) {
+        color: #667eea !important;
+    }
+
+    :global(html[data-theme="dark"] .popup-content a:hover) {
+        color: #764ba2 !important;
+    }
 </style>
