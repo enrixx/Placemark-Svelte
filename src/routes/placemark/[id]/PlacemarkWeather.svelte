@@ -2,12 +2,14 @@
     import type {ChartData, WeatherResponse} from '$lib/types/placemark-types';
     import * as weatherCharts from '$lib/services/weather-charts';
     import WeatherCharts from '$lib/ui/WeatherCharts.svelte';
+    import Message from '$lib/ui/Message.svelte';
 
     interface Props {
         weatherData: WeatherResponse | null;
+        weatherError?: string | null;
     }
 
-    let {weatherData}: Props = $props();
+    let {weatherData, weatherError = null}: Props = $props();
 
     let pastTempChartData = $state<ChartData | null>(null);
     let futureTempChartData = $state<ChartData | null>(null);
@@ -59,15 +61,27 @@
     });
 </script>
 
-<WeatherCharts
-        {pastTempChartData}
-        {futureTempChartData}
-        {pastRainChartData}
-        {futureRainChartData}
-        {windHeatmapDays}
-        {windHeatmapHours}
-        {windHeatmapGrid}
-        {windHeatmapUnit}
-/>
+{#if weatherError}
+    <div class="weather-error">
+        <Message message={weatherError} />
+    </div>
+{:else}
+    <WeatherCharts
+            {pastTempChartData}
+            {futureTempChartData}
+            {pastRainChartData}
+            {futureRainChartData}
+            {windHeatmapDays}
+            {windHeatmapHours}
+            {windHeatmapGrid}
+            {windHeatmapUnit}
+    />
+{/if}
 
-
+<style>
+    .weather-error {
+        padding: 2rem;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+</style>

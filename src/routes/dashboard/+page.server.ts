@@ -21,8 +21,12 @@ export const load: PageServerLoad = async ({ parent, cookies }) => {
             placemarks,
             user
         };
-    } catch (e) {
-        console.error('Error fetching placemarks:', e);
+    } catch (e: any) {
+       if (e.response?.status === 401) {
+            cookies.delete('placemark-session', { path: '/' });
+            throw redirect(303, '/login');
+        }
+
         return {
             placemarks: [],
             user
@@ -82,11 +86,18 @@ export const actions: Actions = {
             return fail(400, { missing: true, message: 'ID is required' });
         }
 
-        const success = await placemarkService.deletePlacemark(id, token);
-
-        if (success) {
-            return { success: true };
-        } else {
+        try {
+            const success = await placemarkService.deletePlacemark(id, token);
+            if (success) {
+                return { success: true };
+            } else {
+                return fail(500, { message: 'Failed to delete placemark' });
+            }
+        } catch (e: any) {
+            if (e.response?.status === 401) {
+                cookies.delete('placemark-session', { path: '/' });
+                throw redirect(303, '/login');
+            }
             return fail(500, { message: 'Failed to delete placemark' });
         }
     }

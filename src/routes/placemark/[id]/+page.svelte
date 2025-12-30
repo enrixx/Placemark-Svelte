@@ -6,18 +6,23 @@
     import PlacemarkWeather from './PlacemarkWeather.svelte';
     import type {PageData} from './$types';
 
-    let { data }: { data: PageData } = $props();
+    let { data }: { data: PageData & { weatherError?: string | null } } = $props();
 
     let placemark = $state<Placemark | null>(null);
     let weatherData = $state<WeatherResponse | null>(null);
+    let weatherError = $state<string | null>(null);
     let activeTab = $state<'details' | 'weather'>('details');
 
     $effect(() => {
-        if (data.placemark) {
-            placemark = data.placemark;
+        const d = data as any;
+        if (d.placemark) {
+            placemark = d.placemark;
         }
-        if (data.weather) {
-            weatherData = data.weather;
+        if (d.weather) {
+            weatherData = d.weather;
+        }
+        if (d.weatherError) {
+            weatherError = d.weatherError;
         }
     });
 
@@ -103,7 +108,7 @@
                         </div>
                     {:else}
                         <div class="tab-panel" style="animation: fadeIn 0.3s ease;">
-                            <PlacemarkWeather {weatherData}/>
+                            <PlacemarkWeather {weatherData} {weatherError}/>
                         </div>
                     {/if}
                 </div>
