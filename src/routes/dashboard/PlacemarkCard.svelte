@@ -348,5 +348,50 @@
             font-size: 1.2rem;
         }
     }
+
+    /* Dark Mode Overrides */
+    :global(html[data-theme="dark"]) .placemark-card {
+        background: #2d3748;
+        border-color: #4a5568;
+    }
+
+    :global(html[data-theme="dark"]) .placemark-card:hover {
+        border-color: #667eea;
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
+    }
+
+    :global(html[data-theme="dark"]) .placemark-card.is-selected {
+        background: linear-gradient(to bottom, #2d3748 0%, #1a202c 100%);
+        border-color: #667eea;
+    }
+
+    :global(html[data-theme="dark"]) .card-image-container {
+        background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+    }
+
+    :global(html[data-theme="dark"]) .card-title {
+        color: #e2e8f0;
+    }
+
+    :global(html[data-theme="dark"]) .card-description {
+        color: #a0aec0;
+    }
+
+    :global(html[data-theme="dark"]) .card-footer {
+        border-top-color: #4a5568;
+    }
+
+    :global(html[data-theme="dark"]) .footer-button {
+        color: #a0aec0;
+        border-right-color: #4a5568;
+    }
+
+    :global(html[data-theme="dark"]) .footer-button:hover {
+        color: white;
+    }
+
+    :global(html[data-theme="dark"]) .footer-button.danger:hover {
+        background: rgba(255, 56, 96, 0.2);
+    }
 </style>
 

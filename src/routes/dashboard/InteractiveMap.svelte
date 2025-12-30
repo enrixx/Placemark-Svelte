@@ -52,7 +52,8 @@
         map = L.map(mapElement, {
             center: [53.2734, -7.7783],
             zoom: 7,
-            zoomControl: true
+            zoomControl: true,
+            worldCopyJump: true
         });
 
         updateTileLayer();
