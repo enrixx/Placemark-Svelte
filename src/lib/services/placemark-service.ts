@@ -1,5 +1,5 @@
 import axios, {type AxiosError} from "axios";
-
+import {PUBLIC_SERVICE_URL} from '$env/static/public';
 import type {User, RegisterData, Session, Placemark} from "$lib/types/placemark-types";
 import {loggedInUser, setApiError} from "$lib/runes.svelte";
 
@@ -18,7 +18,7 @@ function clearSessionData() {
 }
 
 export const placemarkService = {
-    baseUrl: "http://localhost:3000", // ToDo: move it to env
+    baseUrl: PUBLIC_SERVICE_URL,
 
     getAxiosConfig(token?: string) {
         if (token) {
@@ -50,23 +50,57 @@ export const placemarkService = {
                 }
                 const payload = JSON.parse(atob(response.data.token.split('.')[1]));
                 const session: Session = {
+                    token: response.data.token,
                     user: {
+                        _id: payload.id,
                         email: payload.email,
                         firstName: payload.firstName,
                         lastName: payload.lastName,
                         role: payload.role,
-                        _id: payload.id
-                    },
-                    token: response.data.token,
+                    }
                 };
-                this.saveSession(session);
                 return session;
             }
             return null;
         } catch (error) {
-            this.handleError(error);
             return null;
         }
+    },
+
+    async loginGitHub(email: string, firstName: string, lastName: string): Promise<Session | null> {
+        try {
+            const response = await axios.post(`${this.baseUrl}/api/users/oauth`, {
+                email,
+                firstName,
+                lastName
+            });
+
+            if (response.data.success) {
+                if (typeof window !== 'undefined') {
+                    axios.defaults.headers.common["Authorization"] = "Bearer " + response.data.token;
+                }
+                const payload = JSON.parse(atob(response.data.token.split('.')[1]));
+                const session: Session = {
+                    token: response.data.token,
+                    user: {
+                        _id: payload.id,
+                        email: payload.email,
+                        firstName: payload.firstName,
+                        lastName: payload.lastName,
+                        role: payload.role,
+                    }
+                };
+                return session;
+            }
+            return null;
+        } catch (error) {
+            console.error("loginGitHub error:", error);
+            return null;
+        }
+    },
+
+    async logout() {
+        this.clearSession();
     },
 
     saveSession(session: Session) {

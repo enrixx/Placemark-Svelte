@@ -125,6 +125,14 @@
                 {/if}
             </label>
         </div>
+
+        {#if images.length === 0}
+            <div class="empty-state">
+                <i class="fas fa-images"></i>
+                <p>No photos yet</p>
+                <small>Upload your first photo</small>
+            </div>
+        {/if}
     </div>
 
     {#if selectedFile}
@@ -170,14 +178,6 @@
     {#if uploadError}
         <div class="notification is-danger is-light">
             {uploadError}
-        </div>
-    {/if}
-
-    {#if images.length === 0}
-        <div class="empty-state">
-            <i class="fas fa-images"></i>
-            <p>No photos yet</p>
-            <small>Upload your first photo above</small>
         </div>
     {/if}
 </div>
@@ -566,6 +566,33 @@
             grid-template-columns: repeat(2, 1fr);
             gap: 0.75rem;
         }
+    }
+
+    .empty-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: #94a3b8;
+        text-align: center;
+        padding: 1rem;
+        animation: fadeIn 0.5s ease;
+    }
+
+    .empty-state i {
+        font-size: 2rem;
+        margin-bottom: 0.75rem;
+        color: #cbd5e1;
+    }
+
+    .empty-state p {
+        font-weight: 600;
+        color: #64748b;
+        margin-bottom: 0.25rem;
+    }
+
+    .empty-state small {
+        color: #94a3b8;
     }
 </style>
 

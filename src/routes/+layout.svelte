@@ -736,7 +736,7 @@
         }
 
         .brand-text {
-            font-size: 1.25rem;
+            display: none;
         }
 
         .brand-icon {
@@ -746,7 +746,9 @@
         }
 
         .navbar-content {
-            gap: 1rem;
+            gap: 0.5rem;
+            flex: 1;
+            justify-content: space-between;
         }
 
         .navbar-end {
@@ -761,6 +763,10 @@
         .nav-link,
         .logout-button {
             padding: 0.5rem;
+        }
+
+        .logout-button {
+            min-width: auto;
         }
 
         .nav-link i,
