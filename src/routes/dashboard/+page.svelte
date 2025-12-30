@@ -1,14 +1,14 @@
 <script lang="ts">
-    import {onMount, tick} from 'svelte';
-    import {goto} from '$app/navigation';
-    import {loggedInUser, currentPlacemarks} from '$lib/runes.svelte';
-    import {placemarkService} from '$lib/services/placemark-service';
-    import {refreshPlacemarkState} from '$lib/services/placemark-utils';
+    import {tick} from 'svelte';
+    import {currentPlacemarks, loggedInUser} from '$lib/runes.svelte';
     import CreatePlacemarkForm from '$lib/ui/CreatePlacemarkForm.svelte';
     import PlacemarkFilters from './PlacemarkFilters.svelte';
     import PlacemarkCard from './PlacemarkCard.svelte';
     import InteractiveMap from './InteractiveMap.svelte';
     import type {Placemark} from '$lib/types/placemark-types';
+    import type {PageData} from './$types';
+
+    let { data }: { data: PageData } = $props();
 
     let showCreateForm = $state(false);
     let searchQuery = $state('');
@@ -16,6 +16,13 @@
     let selectedPlacemarkId = $state<string | null>(null);
     let streetMapRef: any = $state(null);
     let terrainMapRef: any = $state(null);
+
+    $effect(() => {
+        if (data.placemarks) {
+            currentPlacemarks.placemarks = data.placemarks;
+            currentPlacemarks.loaded = true;
+        }
+    });
 
     const streetLayerUrl = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
     const terrainLayerUrl = "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png";
@@ -43,35 +50,10 @@
     const resultCount = $derived(filteredPlacemarks.length);
     const totalCount = $derived(currentPlacemarks.placemarks.length);
 
-    onMount(async () => {
-        try {
-            await placemarkService.restoreSession();
-        } catch (e) {
-            console.log("Error restoring session", e);
-        }
-
-        if (!loggedInUser.token) {
-            await goto('/login');
-            return;
-        }
-
-        await refreshPlacemarkState();
-    });
-
-    async function handleDelete(id: string) {
-        if (confirm("Are you sure you want to delete this placemark?")) {
-            const success = await placemarkService.deletePlacemark(id);
-            if (success) {
-                if (selectedPlacemarkId === id) {
-                    selectedPlacemarkId = null;
-                }
-                await refreshPlacemarkState();
-            }
-        }
-    }
-
     function canEditOrDelete(placemark: Placemark) {
-        return loggedInUser.role === 'admin' || loggedInUser._id === placemark.userid;
+        const user = data.user;
+        if (!user) return false;
+        return user.role === 'admin' || user._id === placemark.userid;
     }
 
     function handlePlacemarkSelect(id: string) {
@@ -95,6 +77,8 @@
         if (placemark._id) {
             handlePlacemarkSelect(placemark._id);
         }
+        // Manually update local state if needed, or rely on SSR reload
+        currentPlacemarks.placemarks = [...currentPlacemarks.placemarks, placemark];
     }
 
     function resetFilters() {
@@ -217,7 +201,6 @@
                                     isSelected={selectedPlacemarkId === placemark._id}
                                     canEditOrDelete={canEditOrDelete(placemark)}
                                     onSelect={() => placemark._id && handlePlacemarkSelect(placemark._id)}
-                                    onDelete={() => placemark._id && handleDelete(placemark._id)}
                                 />
                             {/each}
                         </div>
@@ -633,7 +616,7 @@
             align-items: stretch;
         }
 
-        .reset-button {
+        .results-bar button {
             width: 100%;
             justify-content: center;
         }

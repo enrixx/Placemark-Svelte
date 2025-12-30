@@ -1,17 +1,41 @@
 <script lang="ts">
+    import '../app.css';
     import {onMount} from 'svelte';
     import {goto} from '$app/navigation';
+    import {enhance} from '$app/forms';
     import {loggedInUser} from '$lib/runes.svelte';
-    import {placemarkService} from '$lib/services/placemark-service';
     import ErrorNotification from '$lib/ui/ErrorNotification.svelte';
 
-    let {children} = $props();
+    let {children, data} = $props();
 
     // theme stored via $state so assignments are reactive in this project
     let theme = $state('light');
 
+    $effect(() => {
+        if (data.user) {
+            loggedInUser.email = data.user.email;
+            loggedInUser.firstName = data.user.firstName;
+            loggedInUser.lastName = data.user.lastName;
+            loggedInUser.token = data.token;
+            loggedInUser._id = data.user._id;
+            loggedInUser.role = data.user.role;
+            import('axios').then(axios => {
+                axios.default.defaults.headers.common["Authorization"] = "Bearer " + data.token;
+            });
+        } else {
+            loggedInUser.email = "";
+            loggedInUser.firstName = "";
+            loggedInUser.lastName = "";
+            loggedInUser.token = "";
+            loggedInUser._id = "";
+            loggedInUser.role = "";
+            import('axios').then(axios => {
+                delete axios.default.defaults.headers.common["Authorization"];
+            });
+        }
+    });
+
     onMount(async () => {
-        await placemarkService.restoreSession();
         try {
             const saved = localStorage.getItem('theme');
             if (saved === 'dark' || saved === 'light') {
@@ -50,11 +74,6 @@
             };
         }
     });
-
-    function handleLogout() {
-        placemarkService.clearSession();
-        goto('/');
-    }
 </script>
 
 <ErrorNotification/>
@@ -72,7 +91,7 @@
 
         <div class="navbar-content">
             <div class="navbar-start">
-                {#if loggedInUser.token}
+                {#if data.user}
                     <a class="nav-link" href="/dashboard">
                         <i class="fas fa-th-large"></i>
                         <span>Dashboard</span>
@@ -90,16 +109,18 @@
 					</span>
                 </button>
 
-                {#if loggedInUser.token}
-                    <div class="user-badge">
+                {#if data.user}
+                    <button class="user-badge" onclick={() => goto('/profile')}>
                         <i class="fas fa-user-circle"></i>
-                        <span>{loggedInUser.firstName} {loggedInUser.lastName}</span>
-                    </div>
-
-                    <button class="logout-button" onclick={handleLogout}>
-                        <i class="fas fa-sign-out-alt"></i>
-                        <span>Logout</span>
+                        <span>{data.user.firstName} {data.user.lastName}</span>
                     </button>
+
+                    <form action="/logout" method="POST" use:enhance style="display: inline;">
+                        <button class="logout-button" type="submit">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Logout</span>
+                        </button>
+                    </form>
                 {:else}
                     <a class="nav-link" href="/login">
                         <i class="fas fa-sign-in-alt"></i>
@@ -138,8 +159,9 @@
                 <h4 class="footer-title">Quick Links</h4>
                 <ul class="footer-links">
                     <li><a href="/">Home</a></li>
-                    {#if loggedInUser.token}
+                    {#if data.user}
                         <li><a href="/dashboard">Dashboard</a></li>
+                        <li><a href="/profile">Profile</a></li>
                     {:else}
                         <li><a href="/login">Login</a></li>
                         <li><a href="/register">Sign Up</a></li>
@@ -408,19 +430,32 @@
     .user-badge {
         display: flex;
         align-items: center;
+        justify-content: center;
         gap: 0.5rem;
-        padding: 0.5rem 1rem;
-        background: rgba(255, 255, 255, 0.2);
+        padding: 0.75rem 1.25rem;
+        background: rgba(255, 255, 255, 0.15);
         backdrop-filter: blur(10px);
-        border-radius: 20px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-radius: 12px;
         color: white;
         font-weight: 600;
-        font-size: 0.9rem;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        font-family: inherit;
+        font-size: 1rem;
+    }
+
+    .user-badge:hover {
+        background: rgba(255, 255, 255, 0.25);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2);
     }
 
     .logout-button {
         display: flex;
         align-items: center;
+        justify-content: center;
         gap: 0.5rem;
         padding: 0.75rem 1.25rem;
         background: rgba(255, 255, 255, 0.15);
@@ -430,6 +465,9 @@
         font-weight: 600;
         cursor: pointer;
         transition: all 0.3s ease;
+        font-family: inherit;
+        font-size: 1rem;
+        min-width: 140px;
     }
 
     .logout-button:hover {
@@ -603,10 +641,11 @@
     .theme-toggle {
         background: transparent;
         border: none;
-        padding: 0;
+        padding: 0.5rem;
         cursor: pointer;
         display: inline-flex;
         align-items: center;
+        justify-content: center;
     }
 
     .theme-toggle:focus {
@@ -721,7 +760,7 @@
 
         .nav-link,
         .logout-button {
-            padding: 0.75rem;
+            padding: 0.5rem;
         }
 
         .nav-link i,
@@ -731,6 +770,10 @@
 
         .user-badge {
             padding: 0.5rem;
+        }
+
+        .user-badge:hover {
+            transform: translateY(0);
         }
 
         .user-badge span {

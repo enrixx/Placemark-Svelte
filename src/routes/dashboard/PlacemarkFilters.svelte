@@ -66,7 +66,6 @@
         </div>
 
         <div class="filter-field reset-field">
-            <label class="filter-label">&nbsp;</label>
             <button class="reset-button" onclick={onReset}>
                 <i class="fas fa-undo"></i>
                 <span>Reset</span>
@@ -192,7 +191,11 @@
             grid-column: 1 / -1;
         }
 
-        .reset-button {
+        .reset-field {
+            grid-column: 1 / -1;
+        }
+
+        .reset-field button {
             width: 100%;
         }
     }

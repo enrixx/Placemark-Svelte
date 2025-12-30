@@ -1,15 +1,15 @@
 <script lang="ts">
-    import type {PlacemarkImage} from '$lib/types/placemark-types';
-    import {placemarkService} from '$lib/services/placemark-service';
-    import {loggedInUser} from '$lib/runes.svelte';
+    import {enhance} from '$app/forms';
+    import type {PlacemarkImage, User} from '$lib/types/placemark-types';
 
     interface Props {
         placemarkId: string;
         images: PlacemarkImage[];
+        user: User;
         onImageChange?: () => void;
     }
 
-    let {placemarkId, images, onImageChange}: Props = $props();
+    let {images, user, onImageChange}: Props = $props();
 
     let selectedFile = $state<File | null>(null);
     let previewUrl = $state<string | null>(null);
@@ -30,35 +30,6 @@
                 URL.revokeObjectURL(previewUrl);
             }
             previewUrl = URL.createObjectURL(selectedFile);
-        }
-    }
-
-    async function uploadImage() {
-        if (!selectedFile || !placemarkId) return;
-
-        isUploading = true;
-        uploadError = '';
-
-        try {
-            const updatedPlacemark = await placemarkService.uploadImage(placemarkId, selectedFile);
-            if (updatedPlacemark) {
-                selectedFile = null;
-                if (previewUrl) {
-                    URL.revokeObjectURL(previewUrl);
-                    previewUrl = null;
-                }
-                if (fileInput) {
-                    fileInput.value = '';
-                }
-                onImageChange?.();
-            } else {
-                uploadError = 'Failed to upload image. Please try again.';
-            }
-        } catch (error) {
-            console.error('Error uploading image:', error);
-            uploadError = 'Failed to upload image. Please try again.';
-        } finally {
-            isUploading = false;
         }
     }
 
@@ -83,32 +54,25 @@
     }
 
     const canDelete = (image: PlacemarkImage): boolean => {
-        if (!loggedInUser._id) return false;
-        return image.uploaderId === loggedInUser._id || loggedInUser.role === 'admin';
+        if (!user || !user._id) return false;
+        return image.uploaderId === user._id || user.role === 'admin';
     };
 
-    async function deleteImage(imageId: string | undefined) {
-        if (!imageId) return;
-
-        if (!confirm('Are you sure you want to delete this image?')) {
-            return;
+    function handleUpload({ formData }: { formData: FormData }) {
+        if (selectedFile) {
+            formData.set('image', selectedFile);
         }
-
-        isDeleting = true;
-        try {
-            const result = await placemarkService.deleteImage(placemarkId, imageId);
-            if (result) {
-                closeLightbox();
+        isUploading = true;
+        uploadError = '';
+        return async ({ result }: any) => {
+            isUploading = false;
+            if (result.type === 'success') {
+                cancelUpload();
                 onImageChange?.();
-            } else {
-                alert('Failed to delete image. Please try again.');
+            } else if (result.type === 'failure') {
+                uploadError = result.data?.message || 'Failed to upload image';
             }
-        } catch (error) {
-            console.error('Error deleting image:', error);
-            alert('Failed to delete image. Please try again.');
-        } finally {
-            isDeleting = false;
-        }
+        };
     }
 </script>
 
@@ -125,13 +89,13 @@
     <div class="image-grid">
         {#each images as image, index}
             <div
-                class="grid-item"
-                role="button"
-                tabindex="0"
-                onclick={() => openLightbox(image)}
-                onkeydown={(e) => e.key === 'Enter' && openLightbox(image)}
+                    class="grid-item"
+                    role="button"
+                    tabindex="0"
+                    onclick={() => openLightbox(image)}
+                    onkeydown={(e) => e.key === 'Enter' && openLightbox(image)}
             >
-                <img src={image.url} alt="Placemark {index + 1}" />
+                <img src={image.url} alt="Placemark {index + 1}"/>
                 <div class="overlay">
                     <i class="fas fa-search-plus"></i>
                 </div>
@@ -142,11 +106,12 @@
         <div class="grid-item upload-card">
             <label class="upload-label">
                 <input
-                    class="file-input"
-                    type="file"
-                    accept="image/png, image/jpeg, image/jpg, image/gif"
-                    onchange={handleFileSelect}
-                    bind:this={fileInput}
+                        class="file-input"
+                        type="file"
+                        name="image"
+                        accept="image/png, image/jpeg, image/jpg, image/gif"
+                        onchange={handleFileSelect}
+                        bind:this={fileInput}
                 />
                 {#if !selectedFile}
                     <div class="upload-placeholder">
@@ -155,44 +120,51 @@
                     </div>
                 {:else}
                     <div class="upload-preview">
-                        <img src={previewUrl} alt="Preview" />
+                        <img src={previewUrl} alt="Preview"/>
                     </div>
                 {/if}
             </label>
         </div>
     </div>
 
-    <!-- Upload Actions -->
     {#if selectedFile}
-        <div class="upload-actions">
-            <button
-                class="button is-primary"
-                onclick={uploadImage}
-                disabled={isUploading}
-            >
-                {#if isUploading}
+        <form
+                action="?/uploadImage"
+                method="POST"
+                enctype="multipart/form-data"
+                use:enhance={handleUpload}
+        >
+            <div class="upload-actions">
+                <button
+                        class="button is-primary"
+                        type="submit"
+                        disabled={isUploading}
+                >
+                    {#if isUploading}
+                        <span class="icon">
+                            <i class="fas fa-spinner fa-pulse"></i>
+                        </span>
+                        <span>Uploading...</span>
+                    {:else}
+                        <span class="icon">
+                            <i class="fas fa-check"></i>
+                        </span>
+                        <span>Upload</span>
+                    {/if}
+                </button>
+                <button
+                        class="button is-light"
+                        type="button"
+                        onclick={cancelUpload}
+                        disabled={isUploading}
+                >
                     <span class="icon">
-                        <i class="fas fa-spinner fa-pulse"></i>
+                        <i class="fas fa-times"></i>
                     </span>
-                    <span>Uploading...</span>
-                {:else}
-                    <span class="icon">
-                        <i class="fas fa-check"></i>
-                    </span>
-                    <span>Upload</span>
-                {/if}
-            </button>
-            <button
-                class="button is-light"
-                onclick={cancelUpload}
-                disabled={isUploading}
-            >
-                <span class="icon">
-                    <i class="fas fa-times"></i>
-                </span>
-                <span>Cancel</span>
-            </button>
-        </div>
+                    <span>Cancel</span>
+                </button>
+            </div>
+        </form>
     {/if}
 
     {#if uploadError}
@@ -213,36 +185,59 @@
 <!-- Lightbox Modal -->
 {#if lightboxImage}
     <div
-        class="lightbox"
-        role="dialog"
-        aria-modal="true"
-        tabindex="-1"
-        onclick={closeLightbox}
-        onkeydown={(e) => e.key === 'Escape' && closeLightbox()}
+            class="lightbox"
+            role="dialog"
+            aria-modal="true"
+            tabindex="-1"
+            onclick={closeLightbox}
+            onkeydown={(e) => e.key === 'Escape' && closeLightbox()}
     >
         <button class="close-button" onclick={closeLightbox} aria-label="Close lightbox">
             <i class="fas fa-times"></i>
         </button>
 
         <div
-            class="lightbox-content"
-            role="button"
-            tabindex="0"
-            onclick={(e) => e.stopPropagation()}
-            onkeydown={(e) => e.stopPropagation()}
+                class="lightbox-content"
+                role="button"
+                tabindex="0"
+                onclick={(e) => e.stopPropagation()}
+                onkeydown={(e) => e.stopPropagation()}
         >
-            <img src={lightboxImage.url} alt="Placemark in full view" />
+            <img src={lightboxImage.url} alt="Placemark in full view"/>
 
             {#if canDelete(lightboxImage)}
-                <button
-                    class="delete-button"
-                    onclick={() => deleteImage(lightboxImage?._id)}
-                    disabled={isDeleting}
-                    title="Delete image"
+                <form
+                        action="?/deleteImage"
+                        method="POST"
+                        use:enhance={({ cancel }) => {
+                        if (!confirm('Are you sure you want to delete this image?')) {
+                            cancel();
+                            return;
+                        }
+                        isDeleting = true;
+                        return async ({ result }) => {
+                            isDeleting = false;
+                            if (result.type === 'success') {
+                                closeLightbox();
+                                onImageChange?.();
+                            } else {
+                                alert('Failed to delete image. Please try again.');
+                            }
+                        };
+                    }}
+                        style="display: contents;"
                 >
-                    <i class="fas fa-trash-alt"></i>
-                    <span>Delete</span>
-                </button>
+                    <input type="hidden" name="imageId" value={lightboxImage._id}/>
+                    <button
+                            type="submit"
+                            class="delete-button"
+                            disabled={isDeleting}
+                            title="Delete image"
+                    >
+                        <i class="fas fa-trash-alt"></i>
+                        <span>Delete</span>
+                    </button>
+                </form>
             {/if}
         </div>
     </div>
@@ -434,28 +429,6 @@
         flex: 1;
     }
 
-    .empty-state {
-        text-align: center;
-        padding: 3rem 1rem;
-        color: #999;
-    }
-
-    .empty-state i {
-        font-size: 4rem;
-        margin-bottom: 1rem;
-        opacity: 0.3;
-    }
-
-    .empty-state p {
-        font-size: 1.2rem;
-        font-weight: 600;
-        margin-bottom: 0.5rem;
-    }
-
-    .empty-state small {
-        color: #bbb;
-    }
-
     /* Lightbox */
     .lightbox {
         position: fixed;
@@ -472,14 +445,6 @@
         animation: fadeIn 0.3s ease;
     }
 
-    @keyframes fadeIn {
-        from {
-            opacity: 0;
-        }
-        to {
-            opacity: 1;
-        }
-    }
 
     .close-button {
         position: absolute;
@@ -509,16 +474,6 @@
         animation: zoomIn 0.3s ease;
     }
 
-    @keyframes zoomIn {
-        from {
-            transform: scale(0.8);
-            opacity: 0;
-        }
-        to {
-            transform: scale(1);
-            opacity: 1;
-        }
-    }
 
     .lightbox-content img {
         max-width: 100%;
