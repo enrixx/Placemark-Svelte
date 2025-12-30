@@ -363,5 +363,54 @@
             padding: 1rem;
         }
     }
+
+    /* Dark Mode Overrides */
+    :global(html[data-theme="dark"]) .page-container {
+        background: linear-gradient(to bottom, #1a202c 0%, #2d3748 100%);
+    }
+
+    :global(html[data-theme="dark"]) .back-button {
+        background: #2d3748;
+        border-color: #4a5568;
+        color: #a0aec0;
+    }
+
+    :global(html[data-theme="dark"]) .back-button:hover {
+        background: #667eea;
+        color: white;
+        border-color: #667eea;
+    }
+
+    :global(html[data-theme="dark"]) .content-section {
+        background: #2d3748;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    :global(html[data-theme="dark"]) .tabs-container {
+        background: #1a202c;
+        border-bottom-color: #4a5568;
+    }
+
+    :global(html[data-theme="dark"]) .tab-button {
+        color: #a0aec0;
+    }
+
+    :global(html[data-theme="dark"]) .tab-button:hover {
+        background: #2d3748;
+        color: #667eea;
+    }
+
+    :global(html[data-theme="dark"]) .tab-button.active {
+        background: #2d3748;
+        color: #667eea;
+    }
+
+    :global(html[data-theme="dark"]) .loading-container {
+        background: #2d3748;
+    }
+
+    :global(html[data-theme="dark"]) .loading-container p {
+        color: #a0aec0;
+    }
 </style>
 

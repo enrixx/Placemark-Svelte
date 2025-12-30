@@ -126,20 +126,29 @@
 
             {#if showPasswordSection}
                 <div class="password-section">
-                    <div class="form-group">
-                        <label for="currentPassword">
-                            <i class="fas fa-key"></i>
-                            <span>Current Password</span>
-                        </label>
-                        <input
-                                id="currentPassword"
-                                name="currentPassword"
-                                type="password"
-                                bind:value={currentPassword}
-                                placeholder="Enter current password"
-                                required
-                        />
-                    </div>
+                    {#if user.isOAuth}
+                        <div class="info-message">
+                            <i class="fas fa-info-circle"></i>
+                            <span>You signed in with GitHub. Set a password to enable email/password login.</span>
+                        </div>
+                    {/if}
+
+                    {#if !user.isOAuth}
+                        <div class="form-group">
+                            <label for="currentPassword">
+                                <i class="fas fa-key"></i>
+                                <span>Current Password</span>
+                            </label>
+                            <input
+                                    id="currentPassword"
+                                    name="currentPassword"
+                                    type="password"
+                                    bind:value={currentPassword}
+                                    placeholder="Enter current password"
+                                    required
+                            />
+                        </div>
+                    {/if}
 
                     <div class="form-group">
                         <label for="newPassword">
@@ -248,7 +257,7 @@
     }
 
     .section-title i {
-        color: var(--primary-color, #3498db);
+        color: var(--primary-color);
     }
 
     .password-section {
@@ -260,6 +269,23 @@
         background: var(--bg-secondary);
         border-radius: 12px;
         margin-top: 1rem;
+    }
+
+    .info-message {
+        padding: 1rem;
+        background: var(--primary-gradient);
+        color: white;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-size: 0.9rem;
+        line-height: 1.5;
+    }
+
+    .info-message i {
+        font-size: 1.1rem;
+        flex-shrink: 0;
     }
 
     .form-group {
@@ -295,7 +321,7 @@
 
     .form-group input:focus {
         outline: none;
-        border-color: var(--primary-color, #3498db);
+        border-color: var(--primary-color);
         box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
     }
 

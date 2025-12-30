@@ -434,5 +434,40 @@
             font-size: 1.25rem;
         }
     }
+
+    /* Dark Mode Overrides */
+    :global(html[data-theme="dark"]) .edit-header .title,
+    :global(html[data-theme="dark"]) .section-title {
+        color: #e2e8f0;
+    }
+
+    :global(html[data-theme="dark"]) .field-label {
+        color: #cbd5e0;
+    }
+
+    :global(html[data-theme="dark"]) .field-input,
+    :global(html[data-theme="dark"]) .field-textarea {
+        background: #1a202c;
+        border-color: #4a5568;
+        color: #e2e8f0;
+    }
+
+    :global(html[data-theme="dark"]) .field-input:focus,
+    :global(html[data-theme="dark"]) .field-textarea:focus {
+        border-color: #667eea;
+    }
+
+    :global(html[data-theme="dark"]) .info-card {
+        background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+        border-color: #4a5568;
+    }
+
+    :global(html[data-theme="dark"]) .info-label {
+        color: #a0aec0;
+    }
+
+    :global(html[data-theme="dark"]) .info-value {
+        color: #e2e8f0;
+    }
 </style>
 

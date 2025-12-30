@@ -274,4 +274,40 @@
             font-size: 3rem;
         }
     }
+
+    /* Dark Mode Overrides */
+    :global(html[data-theme="dark"]) .section-header h3 {
+        color: #e2e8f0;
+    }
+
+    :global(html[data-theme="dark"]) .chart-card {
+        background: linear-gradient(to bottom, #2d3748 0%, #1a202c 100%);
+        border-color: #4a5568;
+    }
+
+    :global(html[data-theme="dark"]) .chart-card:hover {
+        border-color: #667eea;
+    }
+
+    :global(html[data-theme="dark"]) .chart-header {
+        background: linear-gradient(135deg, #667eea30 0%, #764ba230 100%);
+        border-bottom-color: #4a5568;
+    }
+
+    :global(html[data-theme="dark"]) .chart-header h4 {
+        color: #e2e8f0;
+    }
+
+    :global(html[data-theme="dark"]) .chart-help {
+        background: #1a202c;
+        color: #a0aec0;
+    }
+
+    :global(html[data-theme="dark"]) .empty-state h3 {
+        color: #a0aec0;
+    }
+
+    :global(html[data-theme="dark"]) .empty-state p {
+        color: #718096;
+    }
 </style>

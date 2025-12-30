@@ -39,14 +39,17 @@ export const actions: Actions = {
         };
 
         if (newPassword) {
-            if (!currentPassword) {
-                return fail(400, { message: 'Current password is required to change password' });
-            }
+            // OAuth users can set a password without providing current password
+            if (!session.user.isOAuth) {
+                if (!currentPassword) {
+                    return fail(400, { message: 'Current password is required to change password' });
+                }
 
-            // Verify current password
-            const loginSession = await placemarkService.login(session.user.email, currentPassword);
-            if (!loginSession) {
-                 return fail(400, { message: 'Current password is incorrect' });
+                // Verify current password
+                const loginSession = await placemarkService.login(session.user.email, currentPassword);
+                if (!loginSession) {
+                    return fail(400, { message: 'Current password is incorrect' });
+                }
             }
             updates.password = newPassword;
         }
@@ -58,6 +61,10 @@ export const actions: Actions = {
             session.user.firstName = updatedUser.firstName;
             session.user.lastName = updatedUser.lastName;
             session.user.email = updatedUser.email;
+
+            if (newPassword) {
+                session.user.isOAuth = false;
+            }
 
             cookies.set('placemark-session', JSON.stringify(session), {
                 path: '/',

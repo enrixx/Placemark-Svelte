@@ -88,6 +88,7 @@ export const placemarkService = {
                         firstName: payload.firstName,
                         lastName: payload.lastName,
                         role: payload.role,
+                        isOAuth: true
                     }
                 };
                 return session;
@@ -101,56 +102,6 @@ export const placemarkService = {
 
     async logout() {
         this.clearSession();
-    },
-
-    saveSession(session: Session) {
-        if (typeof localStorage === 'undefined') return;
-        loggedInUser.email = session.user.email;
-        loggedInUser.firstName = session.user.firstName;
-        loggedInUser.lastName = session.user.lastName;
-        loggedInUser.token = session.token;
-        loggedInUser._id = session.user._id;
-        loggedInUser.role = session.user.role;
-        localStorage.setItem("placemark", JSON.stringify(loggedInUser));
-    },
-
-    async restoreSession() {
-        if (typeof localStorage === 'undefined') return;
-        try {
-            const savedLoggedInUser = localStorage.getItem("placemark");
-            if (!savedLoggedInUser) {
-                return;
-            }
-
-            const session = JSON.parse(savedLoggedInUser);
-            if (!session.token) {
-                return;
-            }
-
-            // Check if token is expired (time-based check)
-            const payload = JSON.parse(atob(session.token.split('.')[1]));
-            const exp = payload.exp;
-            const now = Math.floor(Date.now() / 1000);
-
-            if (exp && exp < now) {
-                this.clearSession();
-                if (typeof window !== 'undefined') {
-                    window.location.href = "/login";
-                }
-                return;
-            }
-
-            // Restore session data
-            loggedInUser.email = session.email;
-            loggedInUser.firstName = session.firstName;
-            loggedInUser.lastName = session.lastName;
-            loggedInUser.token = session.token;
-            loggedInUser._id = session._id;
-            loggedInUser.role = session.role;
-            axios.defaults.headers.common["Authorization"] = "Bearer " + session.token;
-        } catch (error) {
-            this.clearSession();
-        }
     },
 
     clearSession() {

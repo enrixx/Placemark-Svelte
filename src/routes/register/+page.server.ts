@@ -29,7 +29,7 @@ export const actions: Actions = {
                 cookies.set('placemark-session', JSON.stringify(session), {
                     path: '/',
                     httpOnly: true,
-                    sameSite: 'strict',
+                    sameSite: 'lax',
                     secure: process.env.NODE_ENV === 'production',
                     maxAge: 60 * 60 * 24 * 7 // 1 week
                 });

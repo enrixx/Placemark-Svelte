@@ -149,4 +149,15 @@
         background: linear-gradient(90deg, rgb(255, 245, 245), rgb(255, 0, 0));
         border: 1px solid rgba(0, 0, 0, 0.06);
     }
+
+    /* Dark Mode Overrides */
+    :global(html[data-theme="dark"]) .wind-heatmap__day,
+    :global(html[data-theme="dark"]) .wind-heatmap__hour,
+    :global(html[data-theme="dark"]) .wind-heatmap__legend {
+        color: #a0aec0;
+    }
+
+    :global(html[data-theme="dark"]) .wind-heatmap__cell {
+        border-color: rgba(255, 255, 255, 0.1);
+    }
 </style>

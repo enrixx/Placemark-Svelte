@@ -594,5 +594,42 @@
     .empty-state small {
         color: #94a3b8;
     }
+
+    /* Dark Mode Overrides */
+    :global(html[data-theme="dark"]) .images-container {
+        background: #2d3748;
+        border-color: #4a5568;
+    }
+
+    :global(html[data-theme="dark"]) .header .title {
+        color: #e2e8f0;
+    }
+
+    :global(html[data-theme="dark"]) .image-count {
+        background: #4a5568;
+        color: #e2e8f0;
+    }
+
+    :global(html[data-theme="dark"]) .upload-card {
+        background: #1a202c;
+        border-color: #4a5568;
+    }
+
+    :global(html[data-theme="dark"]) .upload-card:hover {
+        border-color: #667eea;
+        background: #2d3748;
+    }
+
+    :global(html[data-theme="dark"]) .upload-placeholder {
+        color: #a0aec0;
+    }
+
+    :global(html[data-theme="dark"]) .empty-state p {
+        color: #a0aec0;
+    }
+
+    :global(html[data-theme="dark"]) .empty-state small {
+        color: #718096;
+    }
 </style>
 
