@@ -11,7 +11,9 @@ function clearSessionData() {
     loggedInUser.token = "";
     loggedInUser._id = "";
     loggedInUser.role = "";
-    localStorage.removeItem("placemark");
+    if (typeof window !== 'undefined') {
+        localStorage.removeItem("placemark");
+    }
     delete axios.defaults.headers.common["Authorization"];
 }
 
@@ -30,7 +32,7 @@ export const placemarkService = {
             const response = await axios.post(`${this.baseUrl}/api/users`, user);
             return response.data !== null;
         } catch (error) {
-            console.log(error);
+            this.handleError(error);
             return false;
         }
     },
@@ -62,7 +64,7 @@ export const placemarkService = {
             }
             return null;
         } catch (error) {
-            console.log(error);
+            this.handleError(error);
             return null;
         }
     },
@@ -97,7 +99,6 @@ export const placemarkService = {
             const now = Math.floor(Date.now() / 1000);
 
             if (exp && exp < now) {
-                console.warn('Token expired - redirecting to login');
                 this.clearSession();
                 if (typeof window !== 'undefined') {
                     window.location.href = "/login";
@@ -114,7 +115,6 @@ export const placemarkService = {
             loggedInUser.role = session.role;
             axios.defaults.headers.common["Authorization"] = "Bearer " + session.token;
         } catch (error) {
-            console.error("Error restoring session:", error);
             this.clearSession();
         }
     },
@@ -151,7 +151,7 @@ export const placemarkService = {
             return response.data;
         } catch (error) {
             this.handleError(error);
-            return null;
+            throw error;
         }
     },
 
@@ -161,7 +161,7 @@ export const placemarkService = {
             return response.data;
         } catch (error) {
             this.handleError(error);
-            return [];
+            throw error;
         }
     },
 
@@ -212,9 +212,8 @@ export const placemarkService = {
             );
             return response.data;
         } catch (error) {
-            console.error('Error deleting image:', error);
             this.handleError(error);
-            return null;
+            throw error;
         }
     },
 
@@ -231,11 +230,10 @@ export const placemarkService = {
     async deletePlacemark(id: string, token?: string) {
         try {
             const response = await axios.delete(`${this.baseUrl}/api/placemarks/${id}`, this.getAxiosConfig(token));
-            console.log('deletePlacemark response:', response);
             return response.status === 204 || response.status === 200;
         } catch (error) {
             this.handleError(error);
-            return false;
+            throw error;
         }
     },
 
@@ -245,7 +243,7 @@ export const placemarkService = {
             return response.data;
         } catch (error) {
             this.handleError(error);
-            return null;
+            throw error;
         }
     },
 
@@ -280,16 +278,18 @@ export const placemarkService = {
             case 400:
                 if (e.response?.data && (e.response.data as any).message) {
                     message = (e.response.data as any).message;
-                    console.log(message);
                 } else {
                     message = 'Invalid request. Please check your input.';
                 }
                 break;
             case 401:
-                clearSessionData();
+                // Only clear session data if we're in the browser
                 if (typeof window !== 'undefined') {
+                    clearSessionData();
                     window.location.href = "/login";
                 }
+                // On server, just log and let the caller handle it
+                message = 'Authentication failed. Please log in again.';
                 break;
             case 403:
                 message = 'You do not have permission to perform this action.';
@@ -312,6 +312,9 @@ export const placemarkService = {
                 }
         }
 
-        setApiError(message, status || 0);
+        // Only set API error in browser context
+        if (typeof window !== 'undefined') {
+            setApiError(message, status || 0);
+        }
     }
 };

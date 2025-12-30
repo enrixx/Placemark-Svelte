@@ -30,8 +30,5 @@
 </form>
 
 <style>
-    .modern-form {
-        width: 100%;
-    }
 </style>
 

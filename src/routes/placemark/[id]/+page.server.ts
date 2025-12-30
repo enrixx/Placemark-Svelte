@@ -20,17 +20,26 @@ export const load: PageServerLoad = async ({ params, cookies, parent }) => {
         const placemark = await placemarkService.getPlacemarkById(placemarkId, token);
 
         let weather = null;
+        let weatherError = null;
         if (placemark) {
-            weather = await placemarkService.getWeather(placemarkId, token);
+            try {
+                weather = await placemarkService.getWeather(placemarkId, token);
+            } catch (e: any) {
+                weatherError = e.message || 'Failed to fetch weather data';
+            }
         }
 
         return {
             placemark,
             weather,
+            weatherError,
             user
         };
-    } catch (e) {
-        console.error('Error fetching placemark:', e);
+    } catch (e: any) {
+        if (e.response?.status === 401) {
+            cookies.delete('placemark-session', { path: '/' });
+            throw redirect(303, '/login');
+        }
         throw redirect(303, '/dashboard');
     }
 };
@@ -114,11 +123,14 @@ export const actions: Actions = {
             longitude
         };
 
-        const updatedPlacemark = await placemarkService.updatePlacemark(placemarkId, placemark, token);
-
-        if (updatedPlacemark) {
+        try {
+            const updatedPlacemark = await placemarkService.updatePlacemark(placemarkId, placemark, token);
             return { success: true, placemark: updatedPlacemark };
-        } else {
+        } catch (e: any) {
+            if (e.response?.status === 401) {
+                cookies.delete('placemark-session', { path: '/' });
+                throw redirect(303, '/login');
+            }
             return fail(500, { message: 'Failed to update placemark' });
         }
     }

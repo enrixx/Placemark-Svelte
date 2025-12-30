@@ -137,10 +137,6 @@
 </form>
 
 <style>
-    .modern-form {
-        width: 100%;
-    }
-
     .form-grid {
         display: grid;
         grid-template-columns: repeat(2, 1fr);

@@ -7,7 +7,6 @@ export async function refreshPlacemarkState() {
         currentPlacemarks.placemarks = await placemarkService.getPlacemarks();
         currentPlacemarks.loaded = true;
     } catch (error) {
-        console.error('refreshPlacemarkState: Error loading placemarks:', error);
         currentPlacemarks.placemarks = [];
         currentPlacemarks.loaded = true;
     }
