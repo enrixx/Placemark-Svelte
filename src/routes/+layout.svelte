@@ -192,7 +192,7 @@
 
         <div class="footer-bottom">
             <p class="copyright">
-                <i class="fas fa-copyright"></i> 2025 PlacemarkCORE. All rights reserved.
+                <i class="fas fa-copyright"></i> 2025 PlacemarkCORE by Enrico Hu. All rights reserved.
             </p>
             <div class="footer-social">
                 <a href="https://github.com/enrixx" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
