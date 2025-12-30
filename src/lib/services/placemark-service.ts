@@ -1,5 +1,5 @@
 import axios, {type AxiosError} from "axios";
-
+import {PUBLIC_SERVICE_URL} from '$env/static/public';
 import type {User, RegisterData, Session, Placemark} from "$lib/types/placemark-types";
 import {loggedInUser, setApiError} from "$lib/runes.svelte";
 
@@ -18,7 +18,7 @@ function clearSessionData() {
 }
 
 export const placemarkService = {
-    baseUrl: "http://localhost:3000", // ToDo: move it to env
+    baseUrl: PUBLIC_SERVICE_URL,
 
     getAxiosConfig(token?: string) {
         if (token) {
