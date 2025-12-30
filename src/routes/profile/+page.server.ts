@@ -32,52 +32,61 @@ export const actions: Actions = {
             return fail(400, { missing: true, message: 'First name, last name, and email are required' });
         }
 
-        const updates: any = {
-            firstName,
-            lastName,
-            email
-        };
-
-        if (newPassword) {
-            // OAuth users can set a password without providing current password
-            if (!session.user.isOAuth) {
-                if (!currentPassword) {
-                    return fail(400, { message: 'Current password is required to change password' });
-                }
-
-                // Verify current password
-                const loginSession = await placemarkService.login(session.user.email, currentPassword);
-                if (!loginSession) {
-                    return fail(400, { message: 'Current password is incorrect' });
-                }
-            }
-            updates.password = newPassword;
-        }
-
-        const updatedUser = await placemarkService.updateUser(session.user._id, updates, token);
-
-        if (updatedUser) {
-            // Update session cookie with new user details
-            session.user.firstName = updatedUser.firstName;
-            session.user.lastName = updatedUser.lastName;
-            session.user.email = updatedUser.email;
+        try {
+            const updates: any = {
+                firstName,
+                lastName,
+                email
+            };
 
             if (newPassword) {
-                session.user.isOAuth = false;
+                // OAuth users can set a password without providing current password
+                if (!session.user.isOAuth) {
+                    if (!currentPassword) {
+                        return fail(400, { message: 'Current password is required to change password' });
+                    }
+
+                    // Verify current password
+                    const loginSession = await placemarkService.login(session.user.email, currentPassword);
+                    if (!loginSession) {
+                        return fail(400, { message: 'Current password is incorrect' });
+                    }
+                }
+                updates.password = newPassword;
             }
 
-            cookies.set('placemark-session', JSON.stringify(session), {
-                path: '/',
-                httpOnly: true,
-                sameSite: 'strict',
-                secure: process.env.NODE_ENV === 'production',
-                maxAge: 60 * 60 * 24 * 7
-            });
+            const updatedUser = await placemarkService.updateUser(session.user._id, updates, token);
 
-            return { success: true, message: 'Profile updated successfully' };
-        } else {
-            return fail(500, { message: 'Failed to update profile' });
+            if (updatedUser) {
+                // Update session cookie with new user details
+                session.user.firstName = updatedUser.firstName;
+                session.user.lastName = updatedUser.lastName;
+                session.user.email = updatedUser.email;
+
+                if (newPassword) {
+                    session.user.isOAuth = false;
+                }
+
+                cookies.set('placemark-session', JSON.stringify(session), {
+                    path: '/',
+                    httpOnly: true,
+                    sameSite: 'strict',
+                    secure: process.env.NODE_ENV === 'production',
+                    maxAge: 60 * 60 * 24 * 7
+                });
+
+                return { success: true, message: 'Profile updated successfully' };
+            } else {
+                return fail(500, { message: 'Failed to update profile' });
+            }
+        } catch (error: any) {
+            if (error?.status === 303) {
+                throw error;
+            }
+
+            return fail(error.statusCode || 503, {
+                message: error.message || 'Unable to connect to server. Please try again.'
+            });
         }
     }
 };
-

@@ -61,12 +61,22 @@ export const actions: Actions = {
             return fail(400, { message: 'No image selected' });
         }
 
-        const updatedPlacemark = await placemarkService.uploadImage(placemarkId, image, token);
+        try {
+            const updatedPlacemark = await placemarkService.uploadImage(placemarkId, image, token);
 
-        if (updatedPlacemark) {
-            return { success: true, placemark: updatedPlacemark };
-        } else {
-            return fail(500, { message: 'Failed to upload image' });
+            if (updatedPlacemark) {
+                return { success: true, placemark: updatedPlacemark };
+            } else {
+                return fail(500, { message: 'Failed to upload image' });
+            }
+        } catch (error: any) {
+            if (error?.response?.status === 401) {
+                cookies.delete('placemark-session', { path: '/' });
+                throw redirect(303, '/login');
+            }
+            return fail(error.statusCode || 503, {
+                message: error.message || 'Unable to connect to server. Please try again.'
+            });
         }
     },
 
@@ -86,12 +96,22 @@ export const actions: Actions = {
             return fail(400, { message: 'Image ID is required' });
         }
 
-        const result = await placemarkService.deleteImage(placemarkId, imageId, token);
+        try {
+            const result = await placemarkService.deleteImage(placemarkId, imageId, token);
 
-        if (result) {
-            return { success: true };
-        } else {
-            return fail(500, { message: 'Failed to delete image' });
+            if (result) {
+                return { success: true };
+            } else {
+                return fail(500, { message: 'Failed to delete image' });
+            }
+        } catch (error: any) {
+            if (error?.response?.status === 401) {
+                cookies.delete('placemark-session', { path: '/' });
+                throw redirect(303, '/login');
+            }
+            return fail(error.statusCode || 503, {
+                message: error.message || 'Unable to connect to server. Please try again.'
+            });
         }
     },
 
@@ -126,12 +146,14 @@ export const actions: Actions = {
         try {
             const updatedPlacemark = await placemarkService.updatePlacemark(placemarkId, placemark, token);
             return { success: true, placemark: updatedPlacemark };
-        } catch (e: any) {
-            if (e.response?.status === 401) {
+        } catch (error: any) {
+            if (error?.response?.status === 401) {
                 cookies.delete('placemark-session', { path: '/' });
                 throw redirect(303, '/login');
             }
-            return fail(500, { message: 'Failed to update placemark' });
+            return fail(error.statusCode || 503, {
+                message: error.message || 'Unable to connect to server. Please try again.'
+            });
         }
     }
 };

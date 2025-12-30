@@ -23,7 +23,7 @@ export const placemarkService = {
 
     getAxiosConfig(token?: string) {
         if (token) {
-            return { headers: { Authorization: `Bearer ${token}` } };
+            return {headers: {Authorization: `Bearer ${token}`}};
         }
         return {};
     },
@@ -65,6 +65,7 @@ export const placemarkService = {
             }
             return null;
         } catch (error) {
+            this.handleError(error);
             return null;
         }
     },
@@ -97,7 +98,7 @@ export const placemarkService = {
             }
             return null;
         } catch (error) {
-            console.error("loginGitHub error:", error);
+            this.handleError(error);
             return null;
         }
     },
@@ -138,21 +139,20 @@ export const placemarkService = {
             return response.data;
         } catch (error) {
             this.handleError(error);
-            throw error;
         }
     },
 
-    async getPlacemarks(token?: string) {
+    async getPlacemarks(token?: string): Promise<Placemark[]> {
         try {
             const response = await axios.get(`${this.baseUrl}/api/placemarks`, this.getAxiosConfig(token));
             return response.data;
         } catch (error) {
             this.handleError(error);
-            throw error;
+            return [];
         }
     },
 
-    async getPlacemarkById(id: string, token?: string) {
+    async getPlacemarkById(id: string, token?: string) : Promise<Placemark | null> {
         try {
             const response = await axios.get(`${this.baseUrl}/api/placemarks/${id}`, this.getAxiosConfig(token));
             return response.data;
@@ -162,7 +162,7 @@ export const placemarkService = {
         }
     },
 
-    async getPlacemarksByUserId(userId: string, token?: string) {
+    async getPlacemarksByUserId(userId: string, token?: string): Promise<Placemark[]> {
         try {
             const response = await axios.get(`${this.baseUrl}/api/users/${userId}/placemarks`, this.getAxiosConfig(token));
             return response.data;
@@ -187,7 +187,6 @@ export const placemarkService = {
             return response.data;
         } catch (error) {
             this.handleError(error);
-            return null;
         }
     },
 
@@ -200,11 +199,10 @@ export const placemarkService = {
             return response.data;
         } catch (error) {
             this.handleError(error);
-            throw error;
         }
     },
 
-    async createPlacemark(placemark: Placemark, token?: string) {
+    async createPlacemark(placemark: Placemark, token?: string): Promise<Placemark | null> {
         try {
             const response = await axios.post(`${this.baseUrl}/api/placemarks`, placemark, this.getAxiosConfig(token));
             return response.data;
@@ -214,27 +212,32 @@ export const placemarkService = {
         }
     },
 
-    async deletePlacemark(id: string, token?: string) {
+    async deletePlacemark(id: string, token?: string): Promise<boolean> {
         try {
             const response = await axios.delete(`${this.baseUrl}/api/placemarks/${id}`, this.getAxiosConfig(token));
             return response.status === 204 || response.status === 200;
         } catch (error) {
             this.handleError(error);
-            throw error;
+            return false;
         }
     },
 
-    async updatePlacemark(id: string, placemark: Placemark, token?: string) {
+    async updatePlacemark(id: string, placemark: Placemark, token?: string) : Promise<Placemark | null> {
         try {
             const response = await axios.put(`${this.baseUrl}/api/placemarks/${id}`, placemark, this.getAxiosConfig(token));
             return response.data;
         } catch (error) {
             this.handleError(error);
-            throw error;
+            return null;
         }
     },
 
-    async updateUser(userId: string, updates: { firstName?: string; lastName?: string; email?: string; password?: string }, token?: string) {
+    async updateUser(userId: string, updates: {
+        firstName?: string;
+        lastName?: string;
+        email?: string;
+        password?: string
+    }, token?: string) : Promise<User | null> {
         try {
             const response = await axios.put(`${this.baseUrl}/api/users/${userId}`, updates, this.getAxiosConfig(token));
             if (response.data && typeof window !== 'undefined') {
@@ -302,6 +305,12 @@ export const placemarkService = {
         // Only set API error in browser context
         if (typeof window !== 'undefined') {
             setApiError(message, status || 0);
+        } else {
+            // On server, throw so the caller can handle it
+            const err = new Error(message) as any;
+            err.statusCode = status || 0;
+            err.originalError = error;
+            throw err;
         }
     }
 };

@@ -62,12 +62,22 @@ export const actions: Actions = {
             longitude
         };
 
-        const createdPlacemark = await placemarkService.createPlacemark(placemark, token);
+        try {
+            const createdPlacemark = await placemarkService.createPlacemark(placemark, token);
 
-        if (createdPlacemark) {
-            return { success: true, placemark: createdPlacemark };
-        } else {
-            return fail(500, { message: 'Failed to create placemark' });
+            if (createdPlacemark) {
+                return { success: true, placemark: createdPlacemark };
+            } else {
+                return fail(500, { message: 'Failed to create placemark' });
+            }
+        } catch (error: any) {
+            if (error?.response?.status === 401) {
+                cookies.delete('placemark-session', { path: '/' });
+                throw redirect(303, '/login');
+            }
+            return fail(error.statusCode || 503, {
+                message: error.message || 'Unable to connect to server. Please try again.'
+            });
         }
     },
 
@@ -93,13 +103,14 @@ export const actions: Actions = {
             } else {
                 return fail(500, { message: 'Failed to delete placemark' });
             }
-        } catch (e: any) {
-            if (e.response?.status === 401) {
+        } catch (error: any) {
+            if (error?.response?.status === 401) {
                 cookies.delete('placemark-session', { path: '/' });
                 throw redirect(303, '/login');
             }
-            return fail(500, { message: 'Failed to delete placemark' });
+            return fail(error.statusCode || 503, {
+                message: error.message || 'Unable to connect to server. Please try again.'
+            });
         }
     }
 };
-

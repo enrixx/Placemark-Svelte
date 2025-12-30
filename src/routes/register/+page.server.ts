@@ -14,31 +14,41 @@ export const actions: Actions = {
             return fail(400, {missing: true, message: 'Please fill in all fields'});
         }
 
-        const success = await placemarkService.signup({
-            firstName,
-            lastName,
-            email,
-            password
-        });
+        try {
+            const success = await placemarkService.signup({
+                firstName,
+                lastName,
+                email,
+                password
+            });
 
-        if (success) {
-            // Login
-            const session = await placemarkService.login(email, password);
+            if (success) {
+                // Login
+                const session = await placemarkService.login(email, password);
 
-            if (session) {
-                cookies.set('placemark-session', JSON.stringify(session), {
-                    path: '/',
-                    httpOnly: true,
-                    sameSite: 'lax',
-                    secure: process.env.NODE_ENV === 'production',
-                    maxAge: 60 * 60 * 24 * 7 // 1 week
-                });
+                if (session) {
+                    cookies.set('placemark-session', JSON.stringify(session), {
+                        path: '/',
+                        httpOnly: true,
+                        sameSite: 'lax',
+                        secure: process.env.NODE_ENV === 'production',
+                        maxAge: 60 * 60 * 24 * 7 // 1 week
+                    });
 
-                throw redirect(303, '/dashboard');
+                    throw redirect(303, '/dashboard');
+                }
             }
-        }
 
-        return fail(400, {message: 'Registration failed. Email may already be registered.'});
+            return fail(400, {message: 'Registration failed. Email may already be registered.'});
+        } catch (error: any) {
+            // If it's a redirect, let it through
+            if (error?.status === 303) {
+                throw error;
+            }
+
+            return fail(error.statusCode || 503, {
+                message: error.message || 'Unable to connect to server. Please try again.'
+            });
+        }
     }
 };
-

@@ -9,24 +9,36 @@ export const actions: Actions = {
         const password = formData.get('password') as string;
 
         if (!email || !password) {
-            return fail(400, {email, missing: true});
+            return fail(400, {email, missing: true, message: 'Email and password are required'});
         }
 
-        const session = await placemarkService.login(email, password);
+        try {
+            const session = await placemarkService.login(email, password);
 
-        if (session) {
-            cookies.set('placemark-session', JSON.stringify(session), {
-                path: '/',
-                httpOnly: true,
-                sameSite: 'lax',
-                secure: process.env.NODE_ENV === 'production',
-                maxAge: 60 * 60 * 24 * 7 // 1 week
+            if (session) {
+                cookies.set('placemark-session', JSON.stringify(session), {
+                    path: '/',
+                    httpOnly: true,
+                    sameSite: 'lax',
+                    secure: process.env.NODE_ENV === 'production',
+                    maxAge: 60 * 60 * 24 * 7 // 1 week
+                });
+
+                throw redirect(303, '/dashboard');
+            } else {
+                return fail(400, {email, incorrect: true, message: 'Invalid credentials'});
+            }
+        } catch (error: any) {
+            // If it's a redirect, let it through
+            if (error?.status === 303) {
+                throw error;
+            }
+
+            // Handle errors thrown by handleError
+            return fail(error.statusCode || 503, {
+                email,
+                message: error.message || 'Unable to connect to server. Please try again.'
             });
-
-            throw redirect(303, '/dashboard');
-        } else {
-            return fail(400, {email, incorrect: true, message: 'Invalid credentials'});
         }
     }
 };
-
