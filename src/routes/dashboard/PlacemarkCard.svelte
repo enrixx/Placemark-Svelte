@@ -78,13 +78,12 @@
             <span>View Details</span>
         </a>
         {#if canEditOrDelete}
-            <form action="?/delete" method="POST" use:enhance={() => {
+            <form action="?/delete" method="POST" class="footer-form" use:enhance={() => {
                 return async ({ result }) => {
                     if (result.type === 'success') {
-                        // Optional: trigger a refresh or let SSR handle it
                     }
                 };
-            }} style="display: inline;">
+            }}>
                 <input type="hidden" name="id" value={placemark._id} />
                 <button
                         class="footer-button danger"
@@ -140,7 +139,6 @@
         z-index: 1;
     }
 
-    /* Clickable area - everything except footer */
     .card-clickable-area {
         flex: 1;
         display: flex;
@@ -157,7 +155,6 @@
         outline-offset: -3px;
     }
 
-    /* Image Container */
     .card-image-container {
         position: relative;
         width: 100%;
@@ -214,7 +211,6 @@
         font-size: 3rem;
     }
 
-    /* Card Body */
     .card-body {
         padding: 1.5rem;
         flex: 1;
@@ -280,14 +276,32 @@
         color: #667eea;
     }
 
-    /* Card Footer */
     .card-footer {
         display: flex;
         border-top: 2px solid #f0f0f0;
+        min-height: 54px;
+    }
+
+    .footer-button.primary,
+    .footer-form {
+        width: 50%;
+        flex: 0 0 50%;
+        box-sizing: border-box;
+    }
+
+    .card-footer > :only-child {
+        width: 100%;
+        flex: 0 0 100%;
+    }
+
+    .footer-form {
+        display: flex;
+        margin: 0;
+        padding: 0;
+        border-left: 1px solid #f0f0f0;
     }
 
     .footer-button {
-        flex: 1;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -301,10 +315,14 @@
         cursor: pointer;
         transition: all 0.3s ease;
         text-decoration: none;
+        line-height: 1.5;
     }
 
-    .footer-button:not(:last-child) {
-        border-right: 2px solid #f0f0f0;
+    .footer-button.danger {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        color: #ff3860;
     }
 
     .footer-button.primary:hover {
@@ -312,16 +330,11 @@
         color: white;
     }
 
-    .footer-button.danger {
-        color: #ff3860;
-    }
-
     .footer-button.danger:hover {
         background: #feecf0;
         color: #ff3860;
     }
 
-    /* Responsive */
     @media (max-width: 768px) {
         .card-image-container {
             height: 160px;
@@ -349,7 +362,6 @@
         }
     }
 
-    /* Dark Mode Overrides */
     :global(html[data-theme="dark"]) .placemark-card {
         background: #2d3748;
         border-color: #4a5568;
@@ -381,9 +393,12 @@
         border-top-color: #4a5568;
     }
 
+    :global(html[data-theme="dark"]) .footer-form {
+        border-left-color: #4a5568;
+    }
+
     :global(html[data-theme="dark"]) .footer-button {
         color: #a0aec0;
-        border-right-color: #4a5568;
     }
 
     :global(html[data-theme="dark"]) .footer-button:hover {
@@ -394,4 +409,3 @@
         background: rgba(255, 56, 96, 0.2);
     }
 </style>
-
