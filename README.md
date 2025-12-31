@@ -52,29 +52,25 @@ Placemark-Svelte is a modern full-stack application designed for managing and di
 
 ### Installation
 
-1.  **Clone the repository:**
+1.  **Setup the Backend:**
     ```bash
-    git clone [https://github.com/enrixx/Placemark-Svelte.git](https://github.com/enrixx/Placemark-Svelte.git)
-    cd Placemark-Svelte
-    ```
-
-2.  **Setup the Backend:**
-    ```bash
+    git clone https://github.com/enrixx/PlacemarkCORE.git
     cd PlacemarkCORE
     npm install
     # Create a .env file based on .env.example
     npm run start
     ```
 
-3.  **Setup the Frontend:**
+2.  **Setup the Frontend:**
     ```bash
-    cd ../Placemark-Svelte
+    git clone https://github.com/enrixx/Placemark-Svelte.git
+    cd Placemark-Svelte
     npm install
     # Create a .env file based on .env.example
     npm run dev
     ```
 
-4.  **Access the app:**
+3.  **Access the app:**
     Open your browser and navigate to `http://localhost:5173`
 
 ## ⚙️ Configuration
